@@ -42,3 +42,147 @@ id = "QnRhSLxtsMTC_5TL0IxLG"
 uri = "file://artifacts/aksantimed/public/images/hero-banner.png"
 type = "image"
 title = "Hero banner image"
+
+[[generated]]
+id = "olNg8iIVDHwuXirP-qkSt"
+uri = "file://artifacts/aksantimed/public/products/cardiology.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "0j-rLv0sHX29wXeIMdRsC"
+uri = "file://artifacts/aksantimed/public/products/dentistry.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "kge5kLFk9zsgrjO2TA4Bm"
+uri = "file://artifacts/aksantimed/public/products/diagnostics-lab.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ZpEz9dM9Dlb3ACs7v6CUD"
+uri = "file://artifacts/aksantimed/public/products/ent.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "4uRyjA6alA4aiKFg_aHp3"
+uri = "file://artifacts/aksantimed/public/products/emergency-trauma.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "c_Yt0vc7kOBaZP5byUZfH"
+uri = "file://artifacts/aksantimed/public/products/first-aid.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "GVmAq75rB4QiNdbzkKGN9"
+uri = "file://artifacts/aksantimed/public/products/general-medicine.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "jTh8ZVPNHd7Cfkv_olo6C"
+uri = "file://artifacts/aksantimed/public/products/gynecology-obstetrics.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "RJL0in9dWo4bmJJmad00B"
+uri = "file://artifacts/aksantimed/public/products/health-wellness.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "bLGYtoF6JZhNLsVM9WykJ"
+uri = "file://artifacts/aksantimed/public/products/hospital-furniture.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "xpMehyRKrgA1_23SlNAlN"
+uri = "file://artifacts/aksantimed/public/products/laboratory.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "xCbhhbXxycdOffYviqzsE"
+uri = "file://artifacts/aksantimed/public/products/maternal-child-health.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "5Y1TeA99L8aOVl422LxLt"
+uri = "file://artifacts/aksantimed/public/products/medical-devices.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "HkKP7goEYkq0O24v88HHu"
+uri = "file://artifacts/aksantimed/public/products/ophthalmology.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "v2336G7AKHp8rUXO084g6"
+uri = "file://artifacts/aksantimed/public/products/patient-monitoring.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "S7Y4DuqpnBtKu8Nv2SzUO"
+uri = "file://artifacts/aksantimed/public/products/pediatrics.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "pspbyXJfK8cNk9dIARRwj"
+uri = "file://artifacts/aksantimed/public/products/ppe.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "0tIi_cxtHI7Ju6gWyfb32"
+uri = "file://artifacts/aksantimed/public/products/pharmaceuticals.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "_Yb3VEO1wbBWG250RS0F6"
+uri = "file://artifacts/aksantimed/public/products/physiotherapy.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "J-XwT8E1AHLzUvqJH6pIx"
+uri = "file://artifacts/aksantimed/public/products/radiology-imaging.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "IFpmUWsyijk-wwgY1D4Xm"
+uri = "file://artifacts/aksantimed/public/products/respiratory-care.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "BDA6tIoV0a-TOhkwM14Ti"
+uri = "file://artifacts/aksantimed/public/products/sterilization.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "XDmp_shTTXOX7dYF7aAAo"
+uri = "file://artifacts/aksantimed/public/products/surgery.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "5GjL80P9FTmx0k8CwURIQ"
+uri = "file://artifacts/aksantimed/public/products/surgical-supplies.png"
+type = "image"
+title = "generated_image"
