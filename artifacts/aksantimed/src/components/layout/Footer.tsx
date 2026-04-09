@@ -39,16 +39,16 @@ export function Footer() {
                 <Link href="/products" className="text-sm text-muted-foreground hover:text-primary transition-colors">All Products</Link>
               </li>
               <li>
-                <Link href="/products?category=pharmaceuticals" className="text-sm text-muted-foreground hover:text-primary transition-colors">Pharmaceuticals</Link>
+                <Link href="/general-medicine" className="text-sm text-muted-foreground hover:text-primary transition-colors">General Medicine</Link>
               </li>
               <li>
-                <Link href="/products?category=medical-devices" className="text-sm text-muted-foreground hover:text-primary transition-colors">Medical Devices</Link>
+                <Link href="/laboratory" className="text-sm text-muted-foreground hover:text-primary transition-colors">Laboratory</Link>
+              </li>
+              <li>
+                <Link href="/surgery" className="text-sm text-muted-foreground hover:text-primary transition-colors">Surgery</Link>
               </li>
               <li>
                 <Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">About Us</Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</Link>
               </li>
             </ul>
           </div>

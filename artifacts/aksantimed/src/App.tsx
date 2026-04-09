@@ -10,9 +10,14 @@ import ProductDetail from "./pages/ProductDetail";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import AboutPage from "./pages/AboutPage";
+import GeneralMedicinePage from "./pages/GeneralMedicinePage";
+import LaboratoryPage from "./pages/LaboratoryPage";
+import SurgeryPage from "./pages/SurgeryPage";
 
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,10 +31,15 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <div className="flex flex-col min-h-[100dvh]">
+      <ScrollToTop />
       <Header />
       <main className="flex-1 bg-background text-foreground flex flex-col">
         <Switch>
           <Route path="/" component={HomePage} />
+          <Route path="/about" component={AboutPage} />
+          <Route path="/general-medicine" component={GeneralMedicinePage} />
+          <Route path="/laboratory" component={LaboratoryPage} />
+          <Route path="/surgery" component={SurgeryPage} />
           <Route path="/products" component={ProductsPage} />
           <Route path="/products/:id" component={ProductDetail} />
           <Route path="/cart" component={CartPage} />

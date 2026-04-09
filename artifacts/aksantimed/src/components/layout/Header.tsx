@@ -25,9 +25,10 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/products", label: "All Products" },
-    { href: "/products?categorySlug=general-medicine", label: "General Medicine" },
-    { href: "/products?categorySlug=laboratory", label: "Laboratory" },
-    { href: "/products?categorySlug=surgery", label: "Surgery" },
+    { href: "/general-medicine", label: "General Medicine" },
+    { href: "/laboratory", label: "Laboratory" },
+    { href: "/surgery", label: "Surgery" },
+    { href: "/about", label: "About Us" },
   ];
 
   return (
