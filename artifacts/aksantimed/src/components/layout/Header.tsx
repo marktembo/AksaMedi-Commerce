@@ -80,6 +80,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslation();
@@ -121,25 +122,23 @@ export function Header() {
     location === href || location.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-white shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur-sm shadow-sm">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="flex h-20 items-center justify-between gap-6">
+        <div className="flex h-16 items-center justify-between gap-4">
 
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0 transition-opacity hover:opacity-90" onClick={closeAll}>
-            <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-11" />
+            <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-9" />
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1 flex-1 justify-end">
-
-            <nav className="flex items-center gap-1 text-sm font-medium mr-2">
+          {/* Desktop nav — centered */}
+          <nav className="hidden md:flex items-center gap-0.5 text-sm font-medium flex-1 justify-center">
 
               {/* Home */}
               <Link
                 href="/"
                 onClick={closeAll}
-                className={`px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${location === "/" ? "text-primary font-semibold" : "text-foreground/75"}`}
+                className={`px-3.5 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${location === "/" ? "text-primary font-semibold" : "text-foreground/70"}`}
               >
                 {t("nav.home")}
               </Link>
@@ -151,7 +150,7 @@ export function Header() {
                 onMouseLeave={scheduleClose}
               >
                 <button
-                  className={`flex items-center gap-1 px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "shop" ? "text-primary bg-primary/5" : "text-foreground/75"}`}
+                  className={`flex items-center gap-1 px-3.5 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "shop" ? "text-primary bg-primary/5" : "text-foreground/70"}`}
                   onClick={() => setOpenMenu(openMenu === "shop" ? null : "shop")}
                 >
                   {t("nav.shop")}
@@ -161,7 +160,7 @@ export function Header() {
                 {/* Mega menu panel — full-width fixed below header */}
                 {openMenu === "shop" && (
                   <div
-                    className="fixed left-0 right-0 top-20 z-50 shadow-2xl border-t border-border"
+                    className="fixed left-0 right-0 top-16 z-50 shadow-2xl border-t border-border"
                     onMouseEnter={cancelClose}
                     onMouseLeave={scheduleClose}
                   >
@@ -264,7 +263,7 @@ export function Header() {
                 onMouseLeave={scheduleClose}
               >
                 <button
-                  className={`flex items-center gap-1 px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "specialties" ? "text-primary bg-primary/5" : "text-foreground/75"}`}
+                  className={`flex items-center gap-1 px-3.5 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "specialties" ? "text-primary bg-primary/5" : "text-foreground/70"}`}
                   onClick={() => setOpenMenu(openMenu === "specialties" ? null : "specialties")}
                 >
                   {t("nav.specialties")}
@@ -302,43 +301,57 @@ export function Header() {
               <Link
                 href="/about"
                 onClick={closeAll}
-                className={`px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${isActive("/about") ? "text-primary font-semibold" : "text-foreground/75"}`}
+                className={`px-3.5 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${isActive("/about") ? "text-primary font-semibold" : "text-foreground/70"}`}
               >
                 {t("nav.aboutUs")}
               </Link>
             </nav>
 
-            {/* Divider */}
-            <div className="h-6 w-px bg-border shrink-0 mx-1" />
+          {/* Right actions */}
+          <div className="hidden md:flex items-center gap-1.5 shrink-0">
 
-            {/* Search */}
-            <form onSubmit={handleSearch} className="relative shrink-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                placeholder={t("nav.searchPlaceholder")}
-                className="h-9 w-36 rounded-full border border-input bg-muted/40 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:w-48 transition-all duration-300"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
+            {/* Search — icon toggle */}
+            {searchOpen ? (
+              <form onSubmit={(e) => { handleSearch(e); setSearchOpen(false); }} className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  autoFocus
+                  type="search"
+                  placeholder={t("nav.searchPlaceholder")}
+                  className="h-9 w-52 rounded-full border border-input bg-muted/40 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+                />
+              </form>
+            ) : (
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center justify-center h-9 w-9 rounded-full text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors"
+                aria-label="Search"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            )}
 
             {/* Language Switcher */}
             <LanguageSwitcher />
 
+            {/* Separator */}
+            <div className="h-5 w-px bg-gray-200 mx-0.5" />
+
             {/* Request a Quote */}
             <a
               href="mailto:info@aksantimed.com?subject=Quote Request"
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shrink-0 ml-1"
+              className="inline-flex items-center whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
             >
-              <MessageSquare className="h-4 w-4" />
               {t("nav.requestQuote")}
             </a>
 
             {/* Account — authenticated or Sign Up dropdown */}
             {isAuthenticated ? (
               <div
-                className="relative shrink-0 ml-1"
+                className="relative"
                 onMouseEnter={() => openWith("account")}
                 onMouseLeave={scheduleClose}
               >
@@ -351,7 +364,7 @@ export function Header() {
                 </button>
                 {openMenu === "account" && (
                   <div
-                    className="absolute right-0 top-full mt-2 w-56 bg-white border border-border rounded-2xl shadow-2xl p-2 z-50"
+                    className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl p-2 z-50"
                     onMouseEnter={cancelClose}
                     onMouseLeave={scheduleClose}
                   >
@@ -377,9 +390,9 @@ export function Header() {
                 )}
               </div>
             ) : (
-              /* Sign Up dropdown for unauthenticated users */
+              /* Sign Up dropdown */
               <div
-                className="relative shrink-0 ml-1"
+                className="relative"
                 onMouseEnter={() => openWith("account")}
                 onMouseLeave={scheduleClose}
               >
@@ -387,13 +400,12 @@ export function Header() {
                   onClick={() => setOpenMenu(openMenu === "account" ? null : "account")}
                   className="flex items-center gap-1.5 px-4 h-9 rounded-full border border-primary/40 text-sm font-semibold text-primary hover:bg-primary hover:text-white hover:border-primary transition-colors"
                 >
-                  <UserPlus className="w-3.5 h-3.5" />
                   {t("nav.signUp")}
                   <ChevronDown className={`w-3 h-3 transition-transform ${openMenu === "account" ? "rotate-180" : ""}`} />
                 </button>
                 {openMenu === "account" && (
                   <div
-                    className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 z-50"
+                    className="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 z-50"
                     onMouseEnter={cancelClose}
                     onMouseLeave={scheduleClose}
                   >
@@ -411,8 +423,8 @@ export function Header() {
             )}
 
             {/* Cart */}
-            <Link href="/cart" className="relative group shrink-0 ml-1" onClick={closeAll}>
-              <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+            <Link href="/cart" className="relative group" onClick={closeAll}>
+              <div className="flex items-center justify-center h-9 w-9 rounded-full text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors duration-200">
                 <ShoppingCart className="h-4 w-4" />
               </div>
               {cart && cart.itemCount > 0 && (
@@ -421,6 +433,7 @@ export function Header() {
                 </span>
               )}
             </Link>
+
           </div>
 
           {/* Mobile toggle */}

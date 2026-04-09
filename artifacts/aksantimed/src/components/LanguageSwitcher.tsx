@@ -60,10 +60,11 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
     <div className="relative shrink-0" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 h-9 px-2.5 rounded-full border border-gray-200 text-sm text-gray-600 hover:border-[#8B0000]/30 hover:text-[#8B0000] transition-colors"
+        className="flex items-center gap-1 h-9 px-2.5 rounded-full text-gray-500 hover:text-[#8B0000] hover:bg-[#8B0000]/5 transition-colors"
+        aria-label="Select language"
       >
-        <Globe className="w-3.5 h-3.5" />
-        <span className="font-medium">{current.flag} {current.code.toUpperCase()}</span>
+        <Globe className="w-4 h-4" />
+        <span className="text-xs font-semibold tracking-wide">{current.code.toUpperCase()}</span>
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
