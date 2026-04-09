@@ -65,7 +65,7 @@ export default function HomePage() {
                   <p className="text-sm text-white/70 uppercase tracking-wider font-semibold">Products</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-white">{storeSummary.totalOrders}+</p>
+                  <p className="text-3xl font-bold text-white">1000+</p>
                   <p className="text-sm text-white/70 uppercase tracking-wider font-semibold">Orders Fulfilled</p>
                 </div>
               </div>
