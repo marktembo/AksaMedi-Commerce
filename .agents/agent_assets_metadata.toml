@@ -1,0 +1,44 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Y05qBe84LKVm8KUXu_bvj"
+uri = "file://artifacts/aksantimed/public/images/product-first-aid.png"
+type = "image"
+title = "First aid kit box"
+
+[[generated]]
+id = "yYhHde7WqQQH6mITolEDu"
+uri = "file://artifacts/aksantimed/public/images/product-bp-monitor.png"
+type = "image"
+title = "Blood pressure monitor"
+
+[[generated]]
+id = "OjBc_lHk7GluqfC-qDF_s"
+uri = "file://artifacts/aksantimed/public/images/product-bandages.png"
+type = "image"
+title = "Bandages and gauze"
+
+[[generated]]
+id = "jd86s34AJeaBKotZvnnrT"
+uri = "file://artifacts/aksantimed/public/images/product-thermometer.png"
+type = "image"
+title = "Digital thermometer"
+
+[[generated]]
+id = "kqDHPyUEWqlWXXDOQYSJ7"
+uri = "file://artifacts/aksantimed/public/images/product-oximeter.png"
+type = "image"
+title = "Pulse oximeter"
+
+[[generated]]
+id = "KiTSN09gVek9_MoIelTQX"
+uri = "file://artifacts/aksantimed/public/images/product-masks.png"
+type = "image"
+title = "Medical face masks"
+
+[[generated]]
+id = "QnRhSLxtsMTC_5TL0IxLG"
+uri = "file://artifacts/aksantimed/public/images/hero-banner.png"
+type = "image"
+title = "Hero banner image"
