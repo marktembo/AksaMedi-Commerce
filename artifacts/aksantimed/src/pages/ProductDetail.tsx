@@ -1,65 +1,25 @@
-import { useState } from "react";
 import { useParams, Link } from "wouter";
-import { useGetProduct, useListProducts, useAddToCart } from "@workspace/api-client-react";
+import { useGetProduct, useListProducts } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/product/ProductCard";
-import { ChevronRight, HeartPulse, Activity, ShieldCheck, Minus, Plus, ShoppingCart, Info, Factory, FileText, CheckCircle2 } from "lucide-react";
-import { getSessionId } from "@/lib/session";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, HeartPulse, Activity, ShieldCheck, Info, Factory, FileText, CheckCircle2, MessageSquare, Phone, Mail } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const productId = parseInt(id, 10);
-  const [quantity, setQuantity] = useState(1);
-  
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const sessionId = getSessionId();
 
-  const { data: product, isLoading } = useGetProduct(productId, { 
-    query: { enabled: !!productId } 
+  const { data: product, isLoading } = useGetProduct(productId, {
+    query: { enabled: !!productId }
   });
 
-  const { data: relatedData, isLoading: relatedLoading } = useListProducts(
-    { categoryId: product?.categoryId || undefined, limit: 4 }, 
+  const { data: relatedData } = useListProducts(
+    { categoryId: product?.categoryId || undefined, limit: 4 },
     { query: { enabled: !!product?.categoryId } }
   );
-
-  const addToCartMutation = useAddToCart({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-        toast({
-          title: "Added to Cart",
-          description: `${quantity}x ${product?.name} has been added to your cart.`,
-        });
-      },
-      onError: () => {
-        toast({
-          title: "Error",
-          description: "Failed to add item to cart. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  });
-
-  const handleAddToCart = () => {
-    if (!product || !product.inStock) return;
-    
-    addToCartMutation.mutate({
-      data: {
-        sessionId,
-        productId: product.id,
-        quantity
-      }
-    });
-  };
 
   if (isLoading) {
     return (
@@ -91,9 +51,8 @@ export default function ProductDetail() {
     );
   }
 
-  const discountPercentage = product.originalPrice 
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
-    : 0;
+  const quoteSubject = encodeURIComponent(`Quote Request: ${product.name} (SKU: ${product.sku || product.id})`);
+  const quoteBody = encodeURIComponent(`Hello Aksantimed,\n\nI would like to request a quote for the following product:\n\nProduct: ${product.name}\nSKU: ${product.sku || "N/A"}\nManufacturer: ${product.manufacturer || "N/A"}\n\nQuantity required:\nDelivery location:\nAdditional notes:\n\nThank you.`);
 
   return (
     <div className="bg-background flex-1">
@@ -158,16 +117,11 @@ export default function ProductDetail() {
               <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-2">{product.categoryName || 'Medical Supply'}</p>
               <h1 className="text-3xl md:text-4xl font-bold font-serif text-foreground leading-tight mb-4">{product.name}</h1>
               
-              <div className="flex items-center gap-4 mb-6">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-primary">${product.price.toFixed(2)}</span>
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <span className="text-xl text-muted-foreground line-through decoration-muted-foreground/50">${product.originalPrice.toFixed(2)}</span>
-                  )}
-                </div>
-                {discountPercentage > 0 && (
-                  <Badge className="bg-destructive hover:bg-destructive text-white">Save {discountPercentage}%</Badge>
-                )}
+              <div className="flex items-center gap-3 mb-6">
+                <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-semibold text-primary">
+                  <MessageSquare className="h-4 w-4" />
+                  Price on Request
+                </span>
               </div>
               
               <p className="text-lg text-muted-foreground leading-relaxed">{product.description}</p>
@@ -211,44 +165,36 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Action Area */}
-            <div className="bg-muted/30 p-6 rounded-xl border border-border mt-auto">
-              {product.inStock ? (
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex items-center bg-white border border-input rounded-md h-12 w-full sm:w-32">
-                    <button 
-                      className="w-10 h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      disabled={quantity <= 1}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="flex-1 text-center font-semibold text-foreground">{quantity}</span>
-                    <button 
-                      className="w-10 h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setQuantity(quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <Button 
-                    size="lg" 
-                    className="flex-1 h-12 text-base font-bold shadow-md"
-                    onClick={handleAddToCart}
-                    disabled={addToCartMutation.isPending}
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
-                  </Button>
-                </div>
-              ) : (
-                <Button size="lg" variant="secondary" className="w-full h-12 cursor-not-allowed" disabled>
-                  Out of Stock
-                </Button>
-              )}
-              
-              <div className="mt-4 flex items-start gap-2 text-sm text-muted-foreground bg-white p-3 rounded-md border border-border">
-                <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+            {/* Request a Quote Area */}
+            <div className="bg-muted/30 p-6 rounded-xl border border-border mt-auto space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Contact us for pricing, availability, and bulk order discounts.
+              </p>
+              <a
+                href={`mailto:info@aksantimed.com?subject=${quoteSubject}&body=${quoteBody}`}
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-full bg-primary text-white font-bold text-base shadow-md hover:bg-primary/90 transition-colors"
+              >
+                <MessageSquare className="h-5 w-5" />
+                Request a Quote
+              </a>
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href="tel:+243000000000"
+                  className="flex items-center justify-center gap-2 h-10 rounded-full border border-border bg-white text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
+                >
+                  <Phone className="h-4 w-4" />
+                  Call Us
+                </a>
+                <a
+                  href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}
+                  className="flex items-center justify-center gap-2 h-10 rounded-full border border-border bg-white text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
+                >
+                  <Mail className="h-4 w-4" />
+                  Email Us
+                </a>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-muted-foreground bg-white p-3 rounded-md border border-border">
+                <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <p>Authentic product sourced directly from verified manufacturers. Quality guaranteed by Aksantimed.</p>
               </div>
             </div>
