@@ -1,0 +1,111 @@
+Please improve my products/category page so it works more like a professional medical product lead-generation platform, not just a simple catalogue.
+
+Page context:
+- This is a medical products website
+- The current page lists products under a category
+- I want the page to feel more useful, modern, and conversion-focused
+- The goal is to help users browse products, understand them quickly, and contact us easily
+
+Please make the following functional improvements:
+
+1. Add stronger call-to-actions
+- Add a primary “Request Quote” button on each product card
+- Add a secondary “WhatsApp Us” button on each product card
+- Add an “Add to Inquiry List” button so users can save multiple products before submitting an inquiry
+
+2. Improve the product cards
+Each product card should include:
+- Product image
+- Product name
+- Short description
+- Brand name if available
+- Category label
+- Clear action buttons
+- Better spacing, alignment, and hover effects
+
+3. Add filters and sorting
+At the top of the products page, add:
+- Search bar
+- Filter by brand
+- Filter by category
+- Filter by availability if possible
+- Sort by name
+- Sort by newest
+- Sort by featured/popular
+
+4. Add a better page header
+At the top of the page, add:
+- Category title
+- Short intro text
+- Breadcrumb navigation
+- Total number of products found
+
+5. Add trust-building elements
+Somewhere near the top or between sections, add:
+- A trust section with short points like:
+  - Trusted medical solutions
+  - Quality brands
+  - Support for hospitals and clinics
+- Make it look clean and professional
+
+6. Add an inquiry system
+Create a simple inquiry flow:
+- Users can click “Add to Inquiry List”
+- Selected products are stored locally in state
+- Show an inquiry summary panel or drawer
+- Add a form with:
+  - Name
+  - Email
+  - Phone
+  - Company/Hospital
+  - Message
+- Add a submit inquiry button
+- Structure the code so this can later connect to email or backend logic
+
+7. Add WhatsApp functionality
+- Add a floating WhatsApp button on the page
+- Add WhatsApp buttons on product cards
+- Use a prefilled message like:
+  “Hi, I am interested in [Product Name]. Please share more information.”
+
+8. Improve user experience
+- Add loading skeletons while data is loading
+- Add empty states when no products match filters
+- Add smooth hover states and transitions
+- Make the page fully responsive on desktop, tablet, and mobile
+
+9. Improve layout and styling
+- Make the design look modern, clean, premium, and medical
+- Use card-based layout
+- Improve spacing and hierarchy
+- Use a sticky filters bar on desktop if appropriate
+- Keep the UI professional and conversion-focused
+
+10. Keep code clean
+- Refactor into reusable components where possible
+- Keep components modular
+- Use clear naming
+- Do not break the current page functionality
+- Preserve existing data fetching and routing logic unless necessary
+
+If possible, create or improve these components:
+- ProductsHeader
+- ProductsFilters
+- ProductCard
+- InquiryDrawer or InquiryPanel
+- TrustSection
+- FloatingWhatsAppButton
+- EmptyState
+- LoadingSkeleton
+
+Important:
+- Keep the site fast and clean
+- Prioritize conversions and inquiries
+- Make the page feel like a real B2B medical solutions platform
+- Use the existing project structure as much as possible
+- If there is existing styling, build on it rather than replacing everything unnecessarily
+
+After making the changes, explain:
+1. What was improved
+2. Which files were changed
+3. What I still need to connect manually, such as WhatsApp number, form submission, or backend email logic

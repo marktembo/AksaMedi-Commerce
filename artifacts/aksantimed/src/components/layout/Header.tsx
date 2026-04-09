@@ -1,17 +1,88 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Menu, Search, X, MessageSquare } from "lucide-react";
+import {
+  ShoppingCart, Menu, Search, X, MessageSquare,
+  ChevronDown, FlaskConical, Stethoscope, Scissors,
+  Pill, ShieldCheck, Heart, Activity, Microscope,
+  Layers, HeartPulse, Zap, Package, Wind, Eye,
+  Baby, Star, Syringe, Building, ArrowRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetCart } from "@workspace/api-client-react";
 import { getSessionId } from "@/lib/session";
+
+const shopColumns = [
+  {
+    heading: "Essentials",
+    items: [
+      { label: "Pharmaceuticals", slug: "pharmaceuticals", icon: Pill },
+      { label: "First Aid", slug: "first-aid", icon: ShieldCheck },
+      { label: "Health & Wellness", slug: "health-wellness", icon: Heart },
+      { label: "Personal Protective Equip.", slug: "ppe", icon: ShieldCheck },
+      { label: "Medical Devices", slug: "medical-devices", icon: Activity },
+    ],
+  },
+  {
+    heading: "Diagnostics",
+    items: [
+      { label: "Laboratory", slug: "laboratory", icon: FlaskConical },
+      { label: "Diagnostics & Lab", slug: "diagnostics-lab", icon: Microscope },
+      { label: "Radiology & Imaging", slug: "radiology-imaging", icon: Layers },
+      { label: "Patient Monitoring", slug: "patient-monitoring", icon: HeartPulse },
+    ],
+  },
+  {
+    heading: "Surgery & Procedures",
+    items: [
+      { label: "Surgery", slug: "surgery", icon: Scissors },
+      { label: "Surgical Supplies", slug: "surgical-supplies", icon: Package },
+      { label: "Sterilization", slug: "sterilization", icon: Star },
+      { label: "Emergency & Trauma", slug: "emergency-trauma", icon: Zap },
+    ],
+  },
+  {
+    heading: "Specialties",
+    items: [
+      { label: "Cardiology", slug: "cardiology", icon: HeartPulse },
+      { label: "Pediatrics", slug: "pediatrics", icon: Baby },
+      { label: "Gynecology & Obstetrics", slug: "gynecology-obstetrics", icon: Heart },
+      { label: "Ophthalmology", slug: "ophthalmology", icon: Eye },
+      { label: "ENT", slug: "ent", icon: Activity },
+      { label: "Dentistry", slug: "dentistry", icon: Syringe },
+      { label: "Respiratory Care", slug: "respiratory-care", icon: Wind },
+      { label: "Physiotherapy", slug: "physiotherapy", icon: Activity },
+    ],
+  },
+  {
+    heading: "Facilities",
+    items: [
+      { label: "Hospital Furniture", slug: "hospital-furniture", icon: Building },
+      { label: "Maternal & Child Health", slug: "maternal-child-health", icon: Baby },
+      { label: "General Medicine", slug: "general-medicine", icon: Stethoscope },
+    ],
+  },
+];
+
+const specialtiesLinks = [
+  { href: "/general-medicine", label: "General Medicine", desc: "Diagnostics, monitoring & consumables", icon: Stethoscope },
+  { href: "/laboratory", label: "Laboratory", desc: "Reagents, analysers & rapid diagnostics", icon: FlaskConical },
+  { href: "/surgery", label: "Surgery", desc: "Instruments, disposables & anaesthesia", icon: Scissors },
+];
+
+type OpenMenu = "shop" | "specialties" | null;
 
 export function Header() {
   const [location, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sessionId = getSessionId();
-  const { data: cart } = useGetCart({ sessionId }, { query: { enabled: !!sessionId, queryKey: ["/api/cart", { sessionId }] } });
+  const { data: cart } = useGetCart(
+    { sessionId },
+    { query: { enabled: !!sessionId, queryKey: ["/api/cart", { sessionId }] } }
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,69 +93,186 @@ export function Header() {
     }
   };
 
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/products", label: "All Products" },
-    { href: "/general-medicine", label: "General Medicine" },
-    { href: "/laboratory", label: "Laboratory" },
-    { href: "/surgery", label: "Surgery" },
-    { href: "/about", label: "About Us" },
-  ];
+  const openWith = (menu: OpenMenu) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenMenu(menu);
+  };
+
+  const scheduleClose = () => {
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
+  };
+
+  const cancelClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  };
+
+  const closeAll = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenMenu(null);
+  };
+
+  const isActive = (href: string) =>
+    location === href || location.startsWith(href + "/");
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-white shadow-sm">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex h-20 items-center justify-between gap-6">
 
-          {/* Logo — always left */}
-          <Link href="/" className="flex items-center gap-2 shrink-0 transition-opacity hover:opacity-90">
+          {/* Logo */}
+          <Link href="/" className="flex items-center shrink-0 transition-opacity hover:opacity-90" onClick={closeAll}>
             <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-11" />
           </Link>
 
-          {/* Right-hand cluster: nav + search + quote + cart */}
-          <div className="hidden md:flex items-center gap-5 flex-1 justify-end">
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-end">
 
-            {/* Nav links */}
-            <nav className="flex items-center gap-5 text-sm font-medium">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`whitespace-nowrap transition-colors hover:text-primary ${
-                    location === link.href ? "text-primary font-bold" : "text-foreground/75"
-                  }`}
+            <nav className="flex items-center gap-1 text-sm font-medium mr-2">
+
+              {/* Home */}
+              <Link
+                href="/"
+                onClick={closeAll}
+                className={`px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${location === "/" ? "text-primary font-semibold" : "text-foreground/75"}`}
+              >
+                Home
+              </Link>
+
+              {/* Shop mega menu trigger */}
+              <div
+                className="relative"
+                onMouseEnter={() => openWith("shop")}
+                onMouseLeave={scheduleClose}
+              >
+                <button
+                  className={`flex items-center gap-1 px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "shop" ? "text-primary bg-primary/5" : "text-foreground/75"}`}
+                  onClick={() => setOpenMenu(openMenu === "shop" ? null : "shop")}
                 >
-                  {link.label}
-                </Link>
-              ))}
+                  Shop
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${openMenu === "shop" ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Mega menu panel */}
+                {openMenu === "shop" && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[820px] bg-white border border-border rounded-2xl shadow-2xl p-6 z-50"
+                    onMouseEnter={cancelClose}
+                    onMouseLeave={scheduleClose}
+                  >
+                    {/* Top: columns */}
+                    <div className="grid grid-cols-5 gap-6">
+                      {shopColumns.map((col) => (
+                        <div key={col.heading}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">{col.heading}</p>
+                          <ul className="space-y-1">
+                            {col.items.map((item) => (
+                              <li key={item.slug}>
+                                <Link
+                                  href={`/products?categorySlug=${item.slug}`}
+                                  onClick={closeAll}
+                                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors group"
+                                >
+                                  <item.icon className="h-3.5 w-3.5 text-primary/60 group-hover:text-primary shrink-0" />
+                                  <span className="leading-tight">{item.label}</span>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Footer bar */}
+                    <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">128+ products across 24 categories</p>
+                      <Link
+                        href="/products"
+                        onClick={closeAll}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                      >
+                        View All Products <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Specialties dropdown trigger */}
+              <div
+                className="relative"
+                onMouseEnter={() => openWith("specialties")}
+                onMouseLeave={scheduleClose}
+              >
+                <button
+                  className={`flex items-center gap-1 px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "specialties" ? "text-primary bg-primary/5" : "text-foreground/75"}`}
+                  onClick={() => setOpenMenu(openMenu === "specialties" ? null : "specialties")}
+                >
+                  Specialties
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${openMenu === "specialties" ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Dropdown panel */}
+                {openMenu === "specialties" && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 bg-white border border-border rounded-2xl shadow-2xl p-3 z-50"
+                    onMouseEnter={cancelClose}
+                    onMouseLeave={scheduleClose}
+                  >
+                    {specialtiesLinks.map((s) => (
+                      <Link
+                        key={s.href}
+                        href={s.href}
+                        onClick={closeAll}
+                        className={`flex items-start gap-3 px-3 py-3 rounded-xl transition-colors hover:bg-primary/5 group ${isActive(s.href) ? "bg-primary/5" : ""}`}
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors">
+                          <s.icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className={`font-semibold text-sm ${isActive(s.href) ? "text-primary" : "text-foreground"}`}>{s.label}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{s.desc}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* About Us */}
+              <Link
+                href="/about"
+                onClick={closeAll}
+                className={`px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${isActive("/about") ? "text-primary font-semibold" : "text-foreground/75"}`}
+              >
+                About Us
+              </Link>
             </nav>
 
             {/* Divider */}
-            <div className="h-6 w-px bg-border shrink-0" />
+            <div className="h-6 w-px bg-border shrink-0 mx-1" />
 
-            {/* Search — integrated with actions */}
+            {/* Search */}
             <form onSubmit={handleSearch} className="relative shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
                 type="search"
                 placeholder="Search..."
-                className="h-9 w-40 rounded-full border border-input bg-muted/40 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:w-52 transition-all duration-300"
+                className="h-9 w-36 rounded-full border border-input bg-muted/40 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:w-48 transition-all duration-300"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </form>
 
-            {/* Request a Quote CTA */}
+            {/* Request a Quote */}
             <a
               href="mailto:info@aksantimed.com?subject=Quote Request"
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shrink-0"
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shrink-0 ml-1"
             >
               <MessageSquare className="h-4 w-4" />
               Request a Quote
             </a>
 
-            {/* Cart icon */}
-            <Link href="/cart" className="relative group shrink-0">
+            {/* Cart */}
+            <Link href="/cart" className="relative group shrink-0 ml-1" onClick={closeAll}>
               <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-200">
                 <ShoppingCart className="h-4 w-4" />
               </div>
@@ -110,41 +298,42 @@ export function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-border bg-white p-4 shadow-lg animate-in slide-in-from-top-2">
-          <form onSubmit={handleSearch} className="relative mb-5">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Search products..."
-              className="h-12 w-full rounded-md border border-input bg-muted/20 pl-10 pr-4 text-base focus:outline-none focus:ring-1 focus:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
+        <div className="md:hidden border-t border-border bg-white shadow-lg">
+          <div className="p-4">
+            <form onSubmit={handleSearch} className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="search"
+                placeholder="Search products..."
+                className="h-11 w-full rounded-md border border-input bg-muted/20 pl-10 pr-4 text-base focus:outline-none focus:ring-1 focus:ring-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
 
-          <nav className="flex flex-col gap-1 mb-5">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors ${
-                  location === link.href ? "text-primary bg-primary/5" : "text-foreground"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+            <nav className="flex flex-col gap-1 mb-4">
+              <Link href="/" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
+              <Link href="/products" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>All Products</Link>
 
-          <a
-            href="mailto:info@aksantimed.com?subject=Quote Request"
-            className="flex items-center justify-center gap-2 w-full rounded-full bg-primary h-12 text-base font-semibold text-white hover:bg-primary/90 transition-colors"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            <MessageSquare className="h-5 w-5" />
-            Request a Quote
-          </a>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary px-3 pt-3 pb-1">Specialties</p>
+              {specialtiesLinks.map((s) => (
+                <Link key={s.href} href={s.href} className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  {s.label}
+                </Link>
+              ))}
+
+              <Link href="/about" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+            </nav>
+
+            <a
+              href="mailto:info@aksantimed.com?subject=Quote Request"
+              className="flex items-center justify-center gap-2 w-full rounded-full bg-primary h-12 text-base font-semibold text-white hover:bg-primary/90 transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <MessageSquare className="h-5 w-5" />
+              Request a Quote
+            </a>
+          </div>
         </div>
       )}
     </header>
