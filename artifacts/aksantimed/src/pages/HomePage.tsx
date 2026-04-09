@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <div className="w-full flex flex-col bg-background">
       {/* Hero Section */}
-      <section className="relative w-full h-[600px] flex items-center bg-primary mt-6">
+      <section className="relative w-full h-[600px] flex items-center bg-primary">
         <div className="absolute inset-0 z-0">
           <img 
             src="/images/hero-banner.png" 
