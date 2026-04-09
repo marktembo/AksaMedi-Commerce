@@ -27,15 +27,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-const trustPoints = [
-  { icon: ShieldCheck, title: "Verified Sources", desc: "Every product sourced from accredited, WHO-approved manufacturers." },
-  { icon: Award, title: "Quality Guaranteed", desc: "Batch-certified products meeting international medical standards." },
-  { icon: Truck, title: "Pan-African Delivery", desc: "Reliable supply chain to the DRC, South Africa and beyond." },
-  { icon: HeadphonesIcon, title: "Expert Support", desc: "Dedicated account managers for hospitals, clinics and procurement teams." },
-];
+import { useTranslation } from "react-i18next";
 
 export default function ProductsPage() {
+  const { t } = useTranslation();
   const [location] = useLocation();
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -109,10 +104,17 @@ export default function ProductsPage() {
     return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
   });
 
+  const trustPoints = [
+    { icon: ShieldCheck, title: t("products.trust1Title"), desc: t("products.trust1Desc") },
+    { icon: Award, title: t("products.trust2Title"), desc: t("products.trust2Desc") },
+    { icon: Truck, title: t("products.trust3Title"), desc: t("products.trust3Desc") },
+    { icon: HeadphonesIcon, title: t("products.trust4Title"), desc: t("products.trust4Desc") },
+  ];
+
   const SidebarContent = () => (
     <div className="space-y-8">
       <div>
-        <h3 className="font-bold text-sm uppercase tracking-wider text-foreground mb-4">Categories</h3>
+        <h3 className="font-bold text-sm uppercase tracking-wider text-foreground mb-4">{t("products.categories")}</h3>
         {categoriesLoading ? (
           <div className="space-y-2">
             {Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -124,7 +126,7 @@ export default function ProductsPage() {
                 onClick={() => handleCategoryChange("all")}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${categoryFilter === "all" ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
               >
-                All Products
+                {t("products.allProducts")}
               </button>
             </li>
             {categoriesData?.map((cat) => (
@@ -144,9 +146,13 @@ export default function ProductsPage() {
 
       {/* Availability quick filter */}
       <div>
-        <h3 className="font-bold text-sm uppercase tracking-wider text-foreground mb-4">Availability</h3>
+        <h3 className="font-bold text-sm uppercase tracking-wider text-foreground mb-4">{t("products.availability")}</h3>
         <div className="space-y-0.5">
-          {[["all", "All Items"], ["in-stock", "In Stock Only"], ["out-of-stock", "Out of Stock"]].map(([val, label]) => (
+          {[
+            ["all", t("products.allItems")],
+            ["in-stock", t("products.inStockOnly")],
+            ["out-of-stock", t("products.outOfStockLabel")],
+          ].map(([val, label]) => (
             <button
               key={val}
               onClick={() => setAvailabilityFilter(val)}
@@ -168,9 +174,9 @@ export default function ProductsPage() {
         <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-muted-foreground mb-4 gap-1">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link href="/" className="hover:text-primary transition-colors">{t("products.breadcrumbHome")}</Link>
             <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-foreground font-medium">Products</span>
+            <span className="text-foreground font-medium">{t("products.breadcrumbProducts")}</span>
             {selectedCategoryName && (
               <>
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -182,16 +188,17 @@ export default function ProductsPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold font-serif text-foreground mb-2">
-                {selectedCategoryName ? `${selectedCategoryName} Supplies` : "Medical Catalog"}
+                {selectedCategoryName ? `${selectedCategoryName} ${t("products.suppliesLabel")}` : t("products.title")}
               </h1>
               <p className="text-muted-foreground text-base max-w-xl">
                 {selectedCategoryName
-                  ? `Browse our verified ${selectedCategoryName.toLowerCase()} products. Contact us for pricing and availability.`
-                  : "Browse our comprehensive range of verified medical supplies, pharmaceuticals, and equipment."}
+                  ? t("products.categorySubtitle", { category: selectedCategoryName.toLowerCase() })
+                  : t("products.subtitle")}
               </p>
               {!productsLoading && productsData && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  <span className="font-semibold text-foreground">{productsData.total}</span> product{productsData.total !== 1 ? "s" : ""} found
+                  <span className="font-semibold text-foreground">{productsData.total}</span>{" "}
+                  {t("products.productsFound", { count: productsData.total })}
                 </p>
               )}
             </div>
@@ -203,7 +210,7 @@ export default function ProductsPage() {
                 className="flex items-center gap-2.5 rounded-full bg-primary text-white px-5 h-10 text-sm font-bold shadow-lg hover:bg-primary/90 transition-colors shrink-0 animate-in slide-in-from-right-4"
               >
                 <ClipboardList className="h-4 w-4" />
-                Inquiry List ({inquiryProducts.length})
+                {t("products.inquiryList")} ({inquiryProducts.length})
               </button>
             )}
           </div>
@@ -214,12 +221,12 @@ export default function ProductsPage() {
       <div className="bg-white border-b border-border/60">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-border/40">
-            {trustPoints.map((t) => (
-              <div key={t.title} className="flex items-center gap-3 py-4 px-4 md:px-6">
-                <t.icon className="h-5 w-5 text-primary shrink-0" />
+            {trustPoints.map((tp) => (
+              <div key={tp.title} className="flex items-center gap-3 py-4 px-4 md:px-6">
+                <tp.icon className="h-5 w-5 text-primary shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-foreground">{t.title}</p>
-                  <p className="text-xs text-muted-foreground leading-tight hidden md:block">{t.desc}</p>
+                  <p className="text-xs font-bold text-foreground">{tp.title}</p>
+                  <p className="text-xs text-muted-foreground leading-tight hidden md:block">{tp.desc}</p>
                 </div>
               </div>
             ))}
@@ -247,7 +254,7 @@ export default function ProductsPage() {
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
-                  placeholder="Search by name, SKU, or description..."
+                  placeholder={t("products.searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9 h-9 border-input bg-muted/30 text-sm"
@@ -259,13 +266,13 @@ export default function ProductsPage() {
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="lg:hidden h-9 gap-2">
-                      <SlidersHorizontal className="h-4 w-4" /> Filters
+                      <SlidersHorizontal className="h-4 w-4" /> {t("products.filters")}
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-[300px] sm:w-[360px]">
                     <SheetHeader>
-                      <SheetTitle>Filter Products</SheetTitle>
-                      <SheetDescription>Narrow down your product search.</SheetDescription>
+                      <SheetTitle>{t("products.filterProducts")}</SheetTitle>
+                      <SheetDescription>{t("products.narrowSearch")}</SheetDescription>
                     </SheetHeader>
                     <div className="py-6"><SidebarContent /></div>
                   </SheetContent>
@@ -274,13 +281,13 @@ export default function ProductsPage() {
                 {/* Sort */}
                 <Select value={sortOrder} onValueChange={setSortOrder}>
                   <SelectTrigger className="w-[160px] h-9 text-sm">
-                    <SelectValue placeholder="Sort by" />
+                    <SelectValue placeholder={t("products.sortBy")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="featured">Featured First</SelectItem>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="name-asc">Name: A → Z</SelectItem>
-                    <SelectItem value="name-desc">Name: Z → A</SelectItem>
+                    <SelectItem value="featured">{t("products.sortFeatured")}</SelectItem>
+                    <SelectItem value="newest">{t("products.sortNewest")}</SelectItem>
+                    <SelectItem value="name-asc">{t("products.sortAZ")}</SelectItem>
+                    <SelectItem value="name-desc">{t("products.sortZA")}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -290,7 +297,7 @@ export default function ProductsPage() {
                   className={`relative flex items-center gap-1.5 h-9 rounded-lg px-3 text-sm font-medium border transition-colors ${inquiryProducts.length > 0 ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
                 >
                   <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Inquiry</span>
+                  <span className="hidden sm:inline">{t("products.inquiry")}</span>
                   {inquiryProducts.length > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">
                       {inquiryProducts.length}
@@ -318,9 +325,9 @@ export default function ProductsPage() {
             ) : sortedProducts.length === 0 ? (
               <div className="bg-white p-16 rounded-xl border border-border flex flex-col items-center justify-center text-center">
                 <PackageSearch className="h-16 w-16 text-muted-foreground/20 mb-5" />
-                <h3 className="text-xl font-bold font-serif mb-2">No products found</h3>
+                <h3 className="text-xl font-bold font-serif mb-2">{t("products.noProducts")}</h3>
                 <p className="text-muted-foreground text-sm mb-6 max-w-sm">
-                  We couldn't find products matching your current filters. Try adjusting your search or category.
+                  {t("products.adjustSearch")}
                 </p>
                 <Button
                   variant="outline"

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRegister } from "@/lib/auth-api";
+import { useTranslation } from "react-i18next";
 
 const schema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -28,6 +29,7 @@ type FormData = z.infer<typeof schema>;
 export default function SignUpPage() {
   const [, navigate] = useLocation();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -66,8 +68,8 @@ export default function SignUpPage() {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#8B0000]/10 mb-4">
               <UserPlus className="w-6 h-6 text-[#8B0000]" />
             </div>
-            <h1 className="text-2xl font-bold font-serif text-gray-900">Create your account</h1>
-            <p className="text-sm text-gray-500 mt-1">For clinics, hospitals, practices & medical buyers</p>
+            <h1 className="text-2xl font-bold font-serif text-gray-900">{t("auth.createYourAccount")}</h1>
+            <p className="text-sm text-gray-500 mt-1">{t("auth.signUpSubtitle")}</p>
           </div>
 
           {serverError && (
@@ -80,10 +82,10 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="fullName">Full name <span className="text-red-500">*</span></Label>
+                <Label htmlFor="fullName">{t("auth.fullName")} <span className="text-red-500">*</span></Label>
                 <Input
                   id="fullName"
-                  placeholder="Dr. Jane Doe"
+                  placeholder={t("auth.fullNamePlaceholder")}
                   autoComplete="name"
                   {...register("fullName")}
                   className={errors.fullName ? "border-red-400" : ""}
@@ -92,11 +94,11 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="phone">Phone number</Label>
+                <Label htmlFor="phone">{t("auth.phoneNumber")}</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+243 XXX XXX XXX"
+                  placeholder={t("auth.phonePlaceholder")}
                   autoComplete="tel"
                   {...register("phone")}
                 />
@@ -104,11 +106,11 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email address <span className="text-red-500">*</span></Label>
+              <Label htmlFor="email">{t("auth.emailAddress")} <span className="text-red-500">*</span></Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@hospital.com"
+                placeholder={t("auth.emailHospitalPlaceholder")}
                 autoComplete="email"
                 {...register("email")}
                 className={errors.email ? "border-red-400" : ""}
@@ -118,10 +120,10 @@ export default function SignUpPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="companyName">Organisation / Clinic name <span className="text-red-500">*</span></Label>
+                <Label htmlFor="companyName">{t("auth.organisationName")} <span className="text-red-500">*</span></Label>
                 <Input
                   id="companyName"
-                  placeholder="City Hospital"
+                  placeholder={t("auth.organisationPlaceholder")}
                   {...register("companyName")}
                   className={errors.companyName ? "border-red-400" : ""}
                 />
@@ -129,10 +131,10 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="jobTitle">Job title / Role</Label>
+                <Label htmlFor="jobTitle">{t("auth.jobTitle")}</Label>
                 <Input
                   id="jobTitle"
-                  placeholder="Procurement Manager"
+                  placeholder={t("auth.jobTitlePlaceholder")}
                   {...register("jobTitle")}
                 />
               </div>
@@ -140,12 +142,12 @@ export default function SignUpPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
+                <Label htmlFor="password">{t("auth.password")} <span className="text-red-500">*</span></Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Min. 8 characters"
+                    placeholder={t("auth.passwordPlaceholder")}
                     autoComplete="new-password"
                     {...register("password")}
                     className={errors.password ? "border-red-400 pr-10" : "pr-10"}
@@ -159,12 +161,12 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm password <span className="text-red-500">*</span></Label>
+                <Label htmlFor="confirmPassword">{t("auth.confirmPassword")} <span className="text-red-500">*</span></Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirm ? "text" : "password"}
-                    placeholder="Repeat password"
+                    placeholder={t("auth.confirmPasswordPlaceholder")}
                     autoComplete="new-password"
                     {...register("confirmPassword")}
                     className={errors.confirmPassword ? "border-red-400 pr-10" : "pr-10"}
@@ -180,7 +182,7 @@ export default function SignUpPage() {
 
             <div className="bg-blue-50 rounded-lg p-3 flex items-start gap-2 text-xs text-blue-700 mt-2">
               <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>Your account gives you access to save products, track inquiries, and manage your medical supply orders.</span>
+              <span>{t("auth.accountBenefit")}</span>
             </div>
 
             <Button
@@ -188,14 +190,14 @@ export default function SignUpPage() {
               disabled={isLoading}
               className="w-full bg-[#8B0000] hover:bg-[#6d0000] text-white h-11 font-medium mt-2"
             >
-              {isLoading ? "Creating account…" : "Create account"}
+              {isLoading ? t("auth.creatingAccount") : t("auth.createAccount")}
             </Button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount")}{" "}
             <Link href="/login" className="text-[#8B0000] font-medium hover:underline">
-              Sign in
+              {t("auth.signInLink")}
             </Link>
           </p>
         </div>

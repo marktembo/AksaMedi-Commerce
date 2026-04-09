@@ -14,75 +14,69 @@ import {
   Award,
   TrendingUp,
 } from "lucide-react";
-
-const values = [
-  {
-    icon: ShieldCheck,
-    title: "Quality You Can Trust",
-    body:
-      "Every product in our catalog is sourced from verified manufacturers and meets international medical standards. We never compromise on the safety of the healthcare professionals and patients we serve.",
-  },
-  {
-    icon: Globe2,
-    title: "Pan-African Reach",
-    body:
-      "From our dual headquarters in Kinshasa and Johannesburg, we supply clinics, hospitals, and pharmacies across Central and Southern Africa — bridging the gap between global medical innovation and local healthcare needs.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Continuous Innovation",
-    body:
-      "Healthcare never stands still. We continuously expand our catalog with the latest diagnostic tools, surgical supplies, and pharmaceutical advances so that our partners always have access to what's newest and most effective.",
-  },
-  {
-    icon: Users,
-    title: "People First",
-    body:
-      "Behind every order is a healthcare professional working to save lives. We treat every partnership with the urgency, care, and respect that mission deserves.",
-  },
-];
-
-const stats = [
-  { value: "128+", label: "Medical Products", icon: HeartPulse },
-  { value: "24", label: "Specialty Categories", icon: Target },
-  { value: "2", label: "African Countries", icon: Globe2 },
-  { value: "100%", label: "Verified Suppliers", icon: Award },
-];
-
-const milestones = [
-  {
-    year: "2010",
-    title: "Founded in Kinshasa",
-    body:
-      "Aksantimed was established with a mission to make quality medical supplies accessible across the Democratic Republic of Congo.",
-  },
-  {
-    year: "2014",
-    title: "Hospital Partnerships",
-    body:
-      "Signed agreements with major hospitals in Kinshasa and Lubumbashi, becoming a trusted institutional supplier.",
-  },
-  {
-    year: "2018",
-    title: "South Africa Expansion",
-    body:
-      "Opened our second headquarters in Sandton, Johannesburg, extending our supply chain and reach into Southern Africa.",
-  },
-  {
-    year: "2022",
-    title: "Digital Catalog Launch",
-    body:
-      "Launched our online product catalog to streamline procurement for clinics and healthcare providers across the continent.",
-  },
-  {
-    year: "2025",
-    title: "128+ Products & Growing",
-    body:
-      "Today Aksantimed offers over 128 products across 24 medical specialty categories, with new additions every quarter.",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function AboutPage() {
+  const { t } = useTranslation();
+
+  const values = [
+    {
+      icon: ShieldCheck,
+      title: t("about.value1Title"),
+      body: t("about.value1Body"),
+    },
+    {
+      icon: Globe2,
+      title: t("about.value2Title"),
+      body: t("about.value2Body"),
+    },
+    {
+      icon: Lightbulb,
+      title: t("about.value3Title"),
+      body: t("about.value3Body"),
+    },
+    {
+      icon: Users,
+      title: t("about.value4Title"),
+      body: t("about.value4Body"),
+    },
+  ];
+
+  const stats = [
+    { value: "128+", label: t("about.stat1Label"), icon: HeartPulse },
+    { value: "24", label: t("about.stat2Label"), icon: Target },
+    { value: "2", label: t("about.stat3Label"), icon: Globe2 },
+    { value: "100%", label: t("about.stat4Label"), icon: Award },
+  ];
+
+  const milestones = [
+    {
+      year: t("about.milestone1Year"),
+      title: t("about.milestone1Title"),
+      body: t("about.milestone1Body"),
+    },
+    {
+      year: t("about.milestone2Year"),
+      title: t("about.milestone2Title"),
+      body: t("about.milestone2Body"),
+    },
+    {
+      year: t("about.milestone3Year"),
+      title: t("about.milestone3Title"),
+      body: t("about.milestone3Body"),
+    },
+    {
+      year: t("about.milestone4Year"),
+      title: t("about.milestone4Title"),
+      body: t("about.milestone4Body"),
+    },
+    {
+      year: t("about.milestone5Year"),
+      title: t("about.milestone5Title"),
+      body: t("about.milestone5Body"),
+    },
+  ];
+
   return (
     <div className="bg-background flex-1">
 
@@ -100,14 +94,13 @@ export default function AboutPage() {
         <div className="relative container mx-auto px-4 md:px-6 py-24 md:py-36 flex flex-col items-center text-center gap-6">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
             <HeartPulse className="h-4 w-4" />
-            About Aksantimed
+            {t("about.pageTitle")}
           </span>
           <h1 className="text-4xl md:text-6xl font-bold font-serif max-w-4xl leading-tight">
             Empowering Health,<br />Enriching Lives
           </h1>
           <p className="text-xl text-white/80 max-w-2xl leading-relaxed">
-            A medical supply company born in the heart of Africa, built on a belief that
-            every healthcare professional deserves access to world-class tools and supplies.
+            {t("about.pageSubtitle")}
           </p>
           <div className="flex flex-wrap gap-4 justify-center pt-2">
             <Link href="/products">
@@ -119,7 +112,7 @@ export default function AboutPage() {
               href="mailto:info@aksantimed.com?subject=Partnership Inquiry"
               className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 h-11 text-sm font-semibold text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
             >
-              Get in Touch
+              {t("about.contactTitle")}
             </a>
           </div>
         </div>
@@ -148,21 +141,8 @@ export default function AboutPage() {
             Built to Serve Africa's Healthcare Revolution
           </h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed text-base">
-            <p>
-              Aksantimed was founded in Kinshasa, Democratic Republic of Congo, with a simple but
-              powerful conviction: the quality of healthcare should never be limited by geography.
-            </p>
-            <p>
-              Our founders witnessed first-hand how shortages of reliable medical supplies forced
-              healthcare professionals to improvise, delay care, or turn patients away. That
-              experience became our mission — to build a supply chain that is fast, transparent,
-              and trustworthy.
-            </p>
-            <p>
-              Today, operating from dual offices in Kinshasa and Johannesburg, we serve hospitals,
-              clinics, pharmacies, and independent practitioners across Central and Southern Africa
-              with a growing catalog of over 128 products spanning 24 specialty categories.
-            </p>
+            <p>{t("about.missionBody")}</p>
+            <p>{t("about.missionBody2")}</p>
           </div>
         </div>
         <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
@@ -183,7 +163,7 @@ export default function AboutPage() {
       <section className="bg-muted/30 border-y border-border py-20 md:py-28">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-14">
-            <span className="text-primary text-sm font-bold uppercase tracking-widest">Our Values</span>
+            <span className="text-primary text-sm font-bold uppercase tracking-widest">{t("about.valuesTitle")}</span>
             <h2 className="text-3xl md:text-4xl font-bold font-serif mt-3">
               The Principles That Guide Us
             </h2>
@@ -208,7 +188,7 @@ export default function AboutPage() {
       {/* Timeline */}
       <section className="container mx-auto px-4 md:px-6 py-20 md:py-28">
         <div className="text-center mb-14">
-          <span className="text-primary text-sm font-bold uppercase tracking-widest">Our Journey</span>
+          <span className="text-primary text-sm font-bold uppercase tracking-widest">{t("about.timelineTitle")}</span>
           <h2 className="text-3xl md:text-4xl font-bold font-serif mt-3">
             Milestones That Shaped Us
           </h2>
@@ -258,7 +238,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-14">
             <span className="text-white/60 text-sm font-bold uppercase tracking-widest">Where We Are</span>
-            <h2 className="text-3xl md:text-4xl font-bold font-serif mt-3">Our Offices</h2>
+            <h2 className="text-3xl md:text-4xl font-bold font-serif mt-3">{t("about.headquartersTitle")}</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
@@ -306,15 +286,14 @@ export default function AboutPage() {
         <TrendingUp className="h-10 w-10 text-primary mx-auto mb-4" />
         <h2 className="text-3xl md:text-4xl font-bold font-serif mb-4">Ready to Work Together?</h2>
         <p className="text-muted-foreground max-w-xl mx-auto mb-8 text-base leading-relaxed">
-          Whether you're a hospital procurement manager, clinic owner, or independent practitioner,
-          we'd love to discuss how Aksantimed can support your practice.
+          {t("about.contactSubtitle")}
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <a
             href="mailto:info@aksantimed.com?subject=Partnership Inquiry"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-8 h-12 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
           >
-            Contact Us <ArrowRight className="h-4 w-4" />
+            {t("about.contactTitle")} <ArrowRight className="h-4 w-4" />
           </a>
           <Link href="/products">
             <Button size="lg" variant="outline" className="rounded-full px-8 h-12">

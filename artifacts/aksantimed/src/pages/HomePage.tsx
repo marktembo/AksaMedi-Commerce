@@ -4,17 +4,19 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ShieldCheck, Truck, Clock, HeartHandshake, ArrowRight, Activity, Pill, Stethoscope, BriefcaseMedical } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const { data: featuredCategories, isLoading: categoriesLoading } = useGetFeaturedCategories();
   const { data: productsData, isLoading: productsLoading } = useListProducts({ featured: true, limit: 8 });
   const { data: storeSummary } = useGetStoreSummary();
 
   const trustIcons = [
-    { icon: ShieldCheck, title: "Verified Quality", desc: "Sourced directly from certified global manufacturers" },
-    { icon: Truck, title: "Regional Logistics", desc: "Reliable cold-chain delivery across DRC & South Africa" },
-    { icon: HeartHandshake, title: "Trusted Partners", desc: "Serving 500+ clinics and hospitals regionally" },
-    { icon: Clock, title: "24/7 Support", desc: "Dedicated medical support team available round the clock" },
+    { icon: ShieldCheck, title: t("home.trust1Title"), desc: t("home.trust1Desc") },
+    { icon: Truck, title: t("home.trust2Title"), desc: t("home.trust2Desc") },
+    { icon: HeartHandshake, title: t("home.trust3Title"), desc: t("home.trust3Desc") },
+    { icon: Clock, title: t("home.trust4Title"), desc: t("home.trust4Desc") },
   ];
 
   return (
@@ -34,26 +36,26 @@ export default function HomePage() {
           <div className="max-w-2xl space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white ring-1 ring-white/20 backdrop-blur-sm">
               <Activity className="h-4 w-4" />
-              <span>Empowering health, enriching lives</span>
+              <span>{t("home.tagline")}</span>
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white font-serif leading-[1.1]">
-              Premium Medical Supplies for Africa's Healthcare
+              {t("home.title")}
             </h1>
             
             <p className="text-lg md:text-xl text-white/90 font-medium max-w-xl leading-relaxed">
-              Aksantimed connects professionals and patients with verified pharmaceuticals, advanced medical devices, and essential health supplies.
+              {t("home.subtitle")}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link href="/products">
                 <Button size="lg" className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 font-bold h-12 px-8">
-                  Shop Medical Supplies
+                  {t("home.ctaShop")}
                 </Button>
               </Link>
               <Link href="/products?category=pharmaceuticals">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto text-white border-white hover:bg-white/10 h-12 px-8">
-                  Browse Pharmaceuticals
+                  {t("home.ctaPharm")}
                 </Button>
               </Link>
             </div>
@@ -62,11 +64,11 @@ export default function HomePage() {
               <div className="flex gap-8 pt-8 border-t border-white/20 mt-8">
                 <div>
                   <p className="text-3xl font-bold text-white">{storeSummary.totalProducts}+</p>
-                  <p className="text-sm text-white/70 uppercase tracking-wider font-semibold">Products</p>
+                  <p className="text-sm text-white/70 uppercase tracking-wider font-semibold">{t("home.productsLabel")}</p>
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-white">1000+</p>
-                  <p className="text-sm text-white/70 uppercase tracking-wider font-semibold">Orders Fulfilled</p>
+                  <p className="text-sm text-white/70 uppercase tracking-wider font-semibold">{t("home.ordersLabel")}</p>
                 </div>
               </div>
             )}
@@ -98,11 +100,11 @@ export default function HomePage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-10">
             <div className="max-w-2xl">
-              <h2 className="text-3xl font-bold text-foreground mb-4 font-serif">Medical Categories</h2>
-              <p className="text-muted-foreground text-lg">Browse our comprehensive range of specialized medical equipment and supplies.</p>
+              <h2 className="text-3xl font-bold text-foreground mb-4 font-serif">{t("home.categoriesTitle")}</h2>
+              <p className="text-muted-foreground text-lg">{t("home.categoriesSubtitle")}</p>
             </div>
             <Link href="/products" className="text-primary font-semibold hover:underline flex items-center gap-2 group">
-              View All Categories <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              {t("home.viewAllCategories")} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
@@ -130,7 +132,7 @@ export default function HomePage() {
                     <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{category.name}</h3>
                     <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{category.description}</p>
                     <div className="mt-4 flex items-center text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
-                      Explore Products <ArrowRight className="h-4 w-4 ml-1" />
+                      {t("home.exploreProducts")} <ArrowRight className="h-4 w-4 ml-1" />
                     </div>
                   </div>
                 </div>
@@ -144,8 +146,8 @@ export default function HomePage() {
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 font-serif">Featured Supplies</h2>
-            <p className="text-muted-foreground text-lg">Essential medical products currently in high demand across our network.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 font-serif">{t("home.featuredTitle")}</h2>
+            <p className="text-muted-foreground text-lg">{t("home.featuredSubtitle")}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -161,7 +163,7 @@ export default function HomePage() {
           <div className="mt-12 text-center">
             <Link href="/products">
               <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-primary hover:text-white h-12 px-8 font-semibold">
-                View Entire Catalog
+                {t("home.viewEntireCatalog")}
               </Button>
             </Link>
           </div>
@@ -176,23 +178,23 @@ export default function HomePage() {
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <HeartHandshake className="h-16 w-16 mx-auto text-white/80" />
-            <h2 className="text-3xl md:text-4xl font-bold font-serif">Join the Aksantimed Network</h2>
+            <h2 className="text-3xl md:text-4xl font-bold font-serif">{t("home.networkTitle")}</h2>
             <p className="text-white/80 text-lg leading-relaxed">
-              Subscribe to receive critical updates on medical supply availability, new pharmaceutical lines, and regional health news.
+              {t("home.networkSubtitle")}
             </p>
             <form className="flex flex-col sm:flex-row max-w-md mx-auto gap-3 pt-6" onSubmit={(e) => e.preventDefault()}>
               <input 
                 type="email" 
-                placeholder="Professional email address" 
+                placeholder={t("home.networkPlaceholder")} 
                 className="flex-1 h-12 rounded-lg px-4 text-foreground bg-white focus:outline-none focus:ring-2 focus:ring-secondary"
                 required
               />
               <Button type="submit" size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-12 font-bold px-8">
-                Subscribe
+                {t("home.subscribe")}
               </Button>
             </form>
             <p className="text-xs text-white/50 pt-2">
-              We respect your privacy. No spam, ever.
+              {t("home.networkPrivacy")}
             </p>
           </div>
         </div>

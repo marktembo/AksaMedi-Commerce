@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiForgotPassword } from "@/lib/auth-api";
+import { useTranslation } from "react-i18next";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -16,6 +17,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,18 +45,16 @@ export default function ForgotPasswordPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <Link href="/login" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6">
             <ArrowLeft className="w-4 h-4" />
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
 
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#8B0000]/10 mb-4">
               <KeyRound className="w-6 h-6 text-[#8B0000]" />
             </div>
-            <h1 className="text-2xl font-bold font-serif text-gray-900">Reset password</h1>
+            <h1 className="text-2xl font-bold font-serif text-gray-900">{t("auth.resetPassword")}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {submitted
-                ? "Check your email for reset instructions"
-                : "Enter your email and we'll send you a reset link"}
+              {submitted ? t("auth.resetSubtitleSent") : t("auth.resetSubtitle")}
             </p>
           </div>
 
@@ -62,12 +62,12 @@ export default function ForgotPasswordPage() {
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm w-full">
                 <CheckCircle className="w-4 h-4 shrink-0" />
-                <span>If an account exists for that email, you'll receive reset instructions shortly.</span>
+                <span>{t("auth.resetSentMessage")}</span>
               </div>
               <p className="text-xs text-gray-500 text-center mt-2">
-                Didn't receive it? Check your spam folder or{" "}
+                {t("auth.didntReceive")}{" "}
                 <button onClick={() => setSubmitted(false)} className="text-[#8B0000] hover:underline">
-                  try again
+                  {t("auth.tryAgain")}
                 </button>.
               </p>
             </div>
@@ -82,11 +82,11 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-1.5">
-                  <Label htmlFor="email">Email address</Label>
+                  <Label htmlFor="email">{t("auth.emailAddress")}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@company.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     autoComplete="email"
                     {...register("email")}
                     className={errors.email ? "border-red-400" : ""}
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                   disabled={isLoading}
                   className="w-full bg-[#8B0000] hover:bg-[#6d0000] text-white h-11 font-medium"
                 >
-                  {isLoading ? "Sending…" : "Send reset link"}
+                  {isLoading ? t("auth.sending") : t("auth.sendResetLink")}
                 </Button>
               </form>
             </>

@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { HeartPulse, Activity, MessageSquare, Plus, Check } from "lucide-react";
 import { Product } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +11,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToInquiry, inInquiry = false }: ProductCardProps) {
+  const { t } = useTranslation();
   const quoteSubject = encodeURIComponent(`Quote Request: ${product.name} (SKU: ${product.sku || product.id})`);
   const quoteBody = encodeURIComponent(
     `Hello Aksantimed,\n\nI would like to request a quote for:\n\nProduct: ${product.name}\nSKU: ${product.sku || "N/A"}\nManufacturer: ${product.manufacturer || "N/A"}\n\nQuantity required:\nDelivery location:\n\nThank you.`
@@ -22,10 +24,10 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
           {!product.inStock && (
-            <Badge variant="destructive" className="font-semibold shadow-sm text-xs">Out of Stock</Badge>
+            <Badge variant="destructive" className="font-semibold shadow-sm text-xs">{t("productCard.outOfStock")}</Badge>
           )}
           {product.featured && product.inStock && (
-            <Badge className="bg-secondary text-secondary-foreground hover:bg-secondary shadow-sm text-xs">Featured</Badge>
+            <Badge className="bg-secondary text-secondary-foreground hover:bg-secondary shadow-sm text-xs">{t("productCard.featured")}</Badge>
           )}
         </div>
 
@@ -46,14 +48,14 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
             <HeartPulse className="h-10 w-10 opacity-15" />
-            <span className="text-[10px] font-medium uppercase tracking-wider opacity-40">Image Coming Soon</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider opacity-40">{t("productCard.imageSoon")}</span>
           </div>
         )}
 
         {/* Hover overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent">
           <div className="flex items-center justify-center gap-1.5 w-full h-8 rounded-md bg-white text-primary font-semibold text-xs shadow-md">
-            View Details →
+            {t("productCard.viewDetails")}
           </div>
         </div>
       </Link>
@@ -62,7 +64,7 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
       <div className="p-4 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-1">
           <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">
-            {product.categoryName || "Medical Supply"}
+            {product.categoryName || t("productCard.medicalSupply")}
           </span>
           {product.manufacturer && (
             <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">{product.manufacturer}</span>
@@ -82,7 +84,9 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
         {/* Availability indicator */}
         <div className="flex items-center gap-1.5 mb-3">
           <span className={`h-2 w-2 rounded-full shrink-0 ${product.inStock ? "bg-green-500" : "bg-red-400"}`} />
-          <span className="text-xs text-muted-foreground">{product.inStock ? "In Stock" : "Out of Stock"}</span>
+          <span className="text-xs text-muted-foreground">
+            {product.inStock ? t("productCard.inStock") : t("productCard.outOfStock")}
+          </span>
           {product.sku && <span className="text-xs text-muted-foreground ml-auto">SKU: {product.sku}</span>}
         </div>
 
@@ -95,7 +99,7 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
             onClick={(e) => e.stopPropagation()}
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            Request a Quote
+            {t("productCard.requestQuote")}
           </a>
 
           {/* Add to Inquiry */}
@@ -108,7 +112,7 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
             }`}
           >
             {inInquiry ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            {inInquiry ? "Added to Inquiry" : "Add to Inquiry List"}
+            {inInquiry ? t("productCard.addedToInquiry") : t("productCard.addToInquiry")}
           </button>
         </div>
       </div>

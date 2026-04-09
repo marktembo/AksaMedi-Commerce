@@ -17,6 +17,7 @@ import {
   apiGetSavedProducts, apiUnsaveProduct,
   apiGetInquiries, type SavedProduct, type UserInquiry
 } from "@/lib/auth-api";
+import { useTranslation } from "react-i18next";
 
 type Tab = "profile" | "saved" | "inquiries" | "security";
 
@@ -41,6 +42,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function DashboardPage() {
   const { user, token, logout, updateUser } = useAuth();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -132,10 +134,10 @@ export default function DashboardPage() {
   };
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: "profile", label: "Profile", icon: <User className="w-4 h-4" /> },
-    { key: "saved", label: "Saved Products", icon: <Bookmark className="w-4 h-4" /> },
-    { key: "inquiries", label: "Inquiries", icon: <FileText className="w-4 h-4" /> },
-    { key: "security", label: "Security", icon: <ShieldCheck className="w-4 h-4" /> },
+    { key: "profile", label: t("dashboard.profile"), icon: <User className="w-4 h-4" /> },
+    { key: "saved", label: t("dashboard.savedProducts"), icon: <Bookmark className="w-4 h-4" /> },
+    { key: "inquiries", label: t("dashboard.inquiries"), icon: <FileText className="w-4 h-4" /> },
+    { key: "security", label: t("dashboard.security"), icon: <ShieldCheck className="w-4 h-4" /> },
   ];
 
   const formatDate = (iso: string) =>
@@ -148,8 +150,8 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold font-serif text-gray-900">My Account</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Welcome back, {user.fullName.split(" ")[0]}</p>
+            <h1 className="text-2xl font-bold font-serif text-gray-900">{t("dashboard.myAccount")}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{t("dashboard.welcomeBack")}, {user.fullName.split(" ")[0]}</p>
           </div>
           <Button
             variant="outline"
@@ -158,7 +160,7 @@ export default function DashboardPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-red-600 hover:border-red-300"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("dashboard.signOut")}
           </Button>
         </div>
 
@@ -173,18 +175,18 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 mt-0.5">{user.companyName}</p>
               </div>
               <nav className="space-y-1">
-                {tabs.map((t) => (
+                {tabs.map((tab) => (
                   <button
-                    key={t.key}
-                    onClick={() => setActiveTab(t.key)}
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === t.key
+                      activeTab === tab.key
                         ? "bg-[#8B0000] text-white"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                   >
-                    {t.icon}
-                    {t.label}
+                    {tab.icon}
+                    {tab.label}
                   </button>
                 ))}
                 <button
@@ -192,7 +194,7 @@ export default function DashboardPage() {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  Sign out
+                  {t("dashboard.signOut")}
                 </button>
               </nav>
             </div>
@@ -202,7 +204,7 @@ export default function DashboardPage() {
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Profile Details</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{t("dashboard.profileDetails")}</h2>
                   {!isEditingProfile ? (
                     <Button
                       variant="outline"
@@ -211,7 +213,7 @@ export default function DashboardPage() {
                       className="flex items-center gap-2"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
-                      Edit
+                      {t("dashboard.edit")}
                     </Button>
                   ) : (
                     <Button
@@ -221,7 +223,7 @@ export default function DashboardPage() {
                       className="flex items-center gap-2 text-gray-500"
                     >
                       <X className="w-3.5 h-3.5" />
-                      Cancel
+                      {t("dashboard.cancel")}
                     </Button>
                   )}
                 </div>
@@ -229,7 +231,7 @@ export default function DashboardPage() {
                 {profileSuccess && (
                   <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 mb-4 text-sm">
                     <CheckCircle className="w-4 h-4" />
-                    Profile updated successfully
+                    {t("dashboard.profileUpdated")}
                   </div>
                 )}
                 {profileError && (
@@ -243,25 +245,25 @@ export default function DashboardPage() {
                   <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label>Full name</Label>
+                        <Label>{t("dashboard.fullName")}</Label>
                         <Input {...profileForm.register("fullName")} />
                         {profileForm.formState.errors.fullName && (
                           <p className="text-xs text-red-500">{profileForm.formState.errors.fullName.message}</p>
                         )}
                       </div>
                       <div className="space-y-1.5">
-                        <Label>Phone number</Label>
+                        <Label>{t("auth.phoneNumber")}</Label>
                         <Input {...profileForm.register("phone")} />
                       </div>
                       <div className="space-y-1.5">
-                        <Label>Organisation / Clinic</Label>
+                        <Label>{t("dashboard.organisation")}</Label>
                         <Input {...profileForm.register("companyName")} />
                         {profileForm.formState.errors.companyName && (
                           <p className="text-xs text-red-500">{profileForm.formState.errors.companyName.message}</p>
                         )}
                       </div>
                       <div className="space-y-1.5">
-                        <Label>Job title / Role</Label>
+                        <Label>{t("dashboard.jobTitle")}</Label>
                         <Input {...profileForm.register("jobTitle")} />
                       </div>
                     </div>
@@ -271,18 +273,18 @@ export default function DashboardPage() {
                       className="bg-[#8B0000] hover:bg-[#6d0000] text-white flex items-center gap-2"
                     >
                       <Save className="w-4 h-4" />
-                      {profileSaving ? "Saving…" : "Save changes"}
+                      {profileSaving ? t("dashboard.saving") : t("dashboard.saveChanges")}
                     </Button>
                   </form>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {[
-                      { icon: <User className="w-4 h-4" />, label: "Full name", value: user.fullName },
-                      { icon: <Mail className="w-4 h-4" />, label: "Email address", value: user.email },
-                      { icon: <Phone className="w-4 h-4" />, label: "Phone", value: user.phone ?? "—" },
-                      { icon: <Building2 className="w-4 h-4" />, label: "Organisation", value: user.companyName },
-                      { icon: <Briefcase className="w-4 h-4" />, label: "Job title", value: user.jobTitle ?? "—" },
-                      { icon: <Clock className="w-4 h-4" />, label: "Member since", value: formatDate(user.createdAt) },
+                      { icon: <User className="w-4 h-4" />, label: t("dashboard.fullName"), value: user.fullName },
+                      { icon: <Mail className="w-4 h-4" />, label: t("dashboard.emailAddress"), value: user.email },
+                      { icon: <Phone className="w-4 h-4" />, label: t("dashboard.phone"), value: user.phone ?? "—" },
+                      { icon: <Building2 className="w-4 h-4" />, label: t("dashboard.organisation"), value: user.companyName },
+                      { icon: <Briefcase className="w-4 h-4" />, label: t("dashboard.jobTitle"), value: user.jobTitle ?? "—" },
+                      { icon: <Clock className="w-4 h-4" />, label: t("dashboard.memberSince"), value: formatDate(user.createdAt) },
                     ].map((field) => (
                       <div key={field.label} className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-lg bg-[#8B0000]/10 flex items-center justify-center text-[#8B0000] shrink-0">
@@ -301,17 +303,17 @@ export default function DashboardPage() {
 
             {activeTab === "saved" && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Saved Products</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">{t("dashboard.savedProductsTitle")}</h2>
                 {loadingSaved ? (
                   <div className="text-center py-12 text-gray-400 text-sm">Loading…</div>
                 ) : savedProducts.length === 0 ? (
                   <div className="text-center py-12">
                     <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 font-medium">No saved products yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Browse the catalog and save products you're interested in.</p>
+                    <p className="text-gray-500 font-medium">{t("dashboard.noSavedProducts")}</p>
+                    <p className="text-sm text-gray-400 mt-1">{t("dashboard.noSavedProductsDesc")}</p>
                     <Link href="/products">
                       <Button className="mt-4 bg-[#8B0000] hover:bg-[#6d0000] text-white" size="sm">
-                        Browse catalog
+                        {t("dashboard.browseCatalog")}
                       </Button>
                     </Link>
                   </div>
@@ -331,11 +333,11 @@ export default function DashboardPage() {
                           {sp.productCategory && (
                             <p className="text-xs text-gray-400 mt-0.5">{sp.productCategory}</p>
                           )}
-                          <p className="text-xs text-gray-400 mt-0.5">Saved {formatDate(sp.createdAt)}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{t("dashboard.saved")} {formatDate(sp.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <Link href={`/products/${sp.productId}`}>
-                            <Button variant="outline" size="sm" className="text-xs">View</Button>
+                            <Button variant="outline" size="sm" className="text-xs">{t("dashboard.view")}</Button>
                           </Link>
                           <button
                             onClick={() => removeSaved(sp.id)}
@@ -353,19 +355,19 @@ export default function DashboardPage() {
 
             {activeTab === "inquiries" && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Inquiry History</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">{t("dashboard.inquiryHistory")}</h2>
                 {loadingInquiries ? (
                   <div className="text-center py-12 text-gray-400 text-sm">Loading…</div>
                 ) : inquiries.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 font-medium">No inquiries yet</p>
+                    <p className="text-gray-500 font-medium">{t("dashboard.noInquiries")}</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      When you send a quote request for a product, it will appear here.
+                      {t("dashboard.noInquiriesDesc")}
                     </p>
                     <Link href="/products">
                       <Button className="mt-4 bg-[#8B0000] hover:bg-[#6d0000] text-white" size="sm">
-                        Browse catalog
+                        {t("dashboard.browseCatalog")}
                       </Button>
                     </Link>
                   </div>
@@ -380,7 +382,7 @@ export default function DashboardPage() {
                               ? "bg-blue-50 text-blue-600"
                               : "bg-green-50 text-green-600"
                           }`}>
-                            {inq.status === "sent" ? "Sent" : "Responded"}
+                            {inq.status === "sent" ? t("dashboard.sent") : t("dashboard.responded")}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 line-clamp-2">{inq.message}</p>
@@ -394,12 +396,12 @@ export default function DashboardPage() {
 
             {activeTab === "security" && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Security Settings</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">{t("dashboard.securitySettings")}</h2>
 
                 {passwordSuccess && (
                   <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 mb-6 text-sm">
                     <CheckCircle className="w-4 h-4" />
-                    Password updated successfully
+                    {t("dashboard.passwordUpdated")}
                   </div>
                 )}
                 {passwordError && (
@@ -409,10 +411,10 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <h3 className="text-sm font-semibold text-gray-700 mb-4">Change Password</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">{t("dashboard.changePassword")}</h3>
                 <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4 max-w-sm">
                   <div className="space-y-1.5">
-                    <Label>Current password</Label>
+                    <Label>{t("dashboard.currentPassword")}</Label>
                     <div className="relative">
                       <Input
                         type={showCurrentPw ? "text" : "password"}
@@ -430,7 +432,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>New password</Label>
+                    <Label>{t("dashboard.newPassword")}</Label>
                     <div className="relative">
                       <Input
                         type={showNewPw ? "text" : "password"}
@@ -448,7 +450,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>Confirm new password</Label>
+                    <Label>{t("dashboard.confirmNewPassword")}</Label>
                     <Input type="password" {...passwordForm.register("confirmPassword")} />
                     {passwordForm.formState.errors.confirmPassword && (
                       <p className="text-xs text-red-500">{passwordForm.formState.errors.confirmPassword.message}</p>
@@ -460,7 +462,7 @@ export default function DashboardPage() {
                     disabled={passwordSaving}
                     className="bg-[#8B0000] hover:bg-[#6d0000] text-white"
                   >
-                    {passwordSaving ? "Updating…" : "Update password"}
+                    {passwordSaving ? t("dashboard.updating") : t("dashboard.updatePassword")}
                   </Button>
                 </form>
               </div>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiLogin } from "@/lib/auth-api";
+import { useTranslation } from "react-i18next";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -20,6 +21,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const [, navigate] = useLocation();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +52,8 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#8B0000]/10 mb-4">
               <LogIn className="w-6 h-6 text-[#8B0000]" />
             </div>
-            <h1 className="text-2xl font-bold font-serif text-gray-900">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to your Aksantimed account</p>
+            <h1 className="text-2xl font-bold font-serif text-gray-900">{t("auth.welcomeBack")}</h1>
+            <p className="text-sm text-gray-500 mt-1">{t("auth.signInSubtitle")}</p>
           </div>
 
           {serverError && (
@@ -63,11 +65,11 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">{t("auth.emailAddress")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@company.com"
+                placeholder={t("auth.emailPlaceholder")}
                 autoComplete="email"
                 {...register("email")}
                 className={errors.email ? "border-red-400" : ""}
@@ -77,9 +79,9 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <Link href="/forgot-password" className="text-xs text-[#8B0000] hover:underline">
-                  Forgot password?
+                  {t("auth.forgotPassword")}
                 </Link>
               </div>
               <div className="relative">
@@ -107,14 +109,14 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full bg-[#8B0000] hover:bg-[#6d0000] text-white h-11 font-medium"
             >
-              {isLoading ? "Signing in…" : "Sign in"}
+              {isLoading ? t("auth.signingIn") : t("auth.signIn")}
             </Button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            Don't have an account?{" "}
+            {t("auth.noAccount")}{" "}
             <Link href="/signup" className="text-[#8B0000] font-medium hover:underline">
-              Create account
+              {t("auth.createAccount")}
             </Link>
           </p>
         </div>
