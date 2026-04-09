@@ -24,6 +24,7 @@ import { Footer } from "./components/layout/Footer";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ScrollToTopButton } from "./components/ScrollToTopButton";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,7 @@ function Router() {
         </Switch>
       </main>
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }

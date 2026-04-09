@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useGetCart } from "@workspace/api-client-react";
 import { getSessionId } from "@/lib/session";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const shopColumns = [
   {
@@ -80,6 +82,7 @@ export function Header() {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isAuthenticated, logout } = useAuth();
+  const { t } = useTranslation();
 
   const sessionId = getSessionId();
   const { data: cart } = useGetCart(
@@ -138,7 +141,7 @@ export function Header() {
                 onClick={closeAll}
                 className={`px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${location === "/" ? "text-primary font-semibold" : "text-foreground/75"}`}
               >
-                Home
+                {t("nav.home")}
               </Link>
 
               {/* Shop mega menu trigger */}
@@ -151,7 +154,7 @@ export function Header() {
                   className={`flex items-center gap-1 px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "shop" ? "text-primary bg-primary/5" : "text-foreground/75"}`}
                   onClick={() => setOpenMenu(openMenu === "shop" ? null : "shop")}
                 >
-                  Shop
+                  {t("nav.shop")}
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${openMenu === "shop" ? "rotate-180" : ""}`} />
                 </button>
 
@@ -264,7 +267,7 @@ export function Header() {
                   className={`flex items-center gap-1 px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${openMenu === "specialties" ? "text-primary bg-primary/5" : "text-foreground/75"}`}
                   onClick={() => setOpenMenu(openMenu === "specialties" ? null : "specialties")}
                 >
-                  Specialties
+                  {t("nav.specialties")}
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${openMenu === "specialties" ? "rotate-180" : ""}`} />
                 </button>
 
@@ -301,7 +304,7 @@ export function Header() {
                 onClick={closeAll}
                 className={`px-3 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${isActive("/about") ? "text-primary font-semibold" : "text-foreground/75"}`}
               >
-                About Us
+                {t("nav.aboutUs")}
               </Link>
             </nav>
 
@@ -313,12 +316,15 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
                 type="search"
-                placeholder="Search..."
+                placeholder={t("nav.searchPlaceholder")}
                 className="h-9 w-36 rounded-full border border-input bg-muted/40 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:w-48 transition-all duration-300"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </form>
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Request a Quote */}
             <a
@@ -326,10 +332,10 @@ export function Header() {
               className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shrink-0 ml-1"
             >
               <MessageSquare className="h-4 w-4" />
-              Request a Quote
+              {t("nav.requestQuote")}
             </a>
 
-            {/* Account */}
+            {/* Account — authenticated or Sign Up dropdown */}
             {isAuthenticated ? (
               <div
                 className="relative shrink-0 ml-1"
@@ -355,31 +361,52 @@ export function Header() {
                     </div>
                     <Link href="/account" onClick={closeAll}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
-                      <LayoutDashboard className="w-4 h-4" /> My Dashboard
+                      <LayoutDashboard className="w-4 h-4" /> {t("nav.myDashboard")}
                     </Link>
                     <Link href="/account" onClick={closeAll}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
-                      <User className="w-4 h-4" /> Profile
+                      <User className="w-4 h-4" /> {t("nav.profile")}
                     </Link>
                     <button
                       onClick={() => { logout(); closeAll(); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors mt-1"
                     >
-                      <LogOut className="w-4 h-4" /> Sign out
+                      <LogOut className="w-4 h-4" /> {t("nav.signOut")}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1 shrink-0 ml-1">
-                <Link href="/login" onClick={closeAll}
-                  className="flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-medium text-gray-600 hover:text-primary hover:bg-primary/5 transition-colors">
-                  <LogIn className="w-3.5 h-3.5" /> Sign in
-                </Link>
-                <Link href="/signup" onClick={closeAll}
-                  className="flex items-center gap-1.5 px-3 h-9 rounded-full border border-primary/30 text-sm font-medium text-primary hover:bg-primary hover:text-white transition-colors">
-                  <UserPlus className="w-3.5 h-3.5" /> Register
-                </Link>
+              /* Sign Up dropdown for unauthenticated users */
+              <div
+                className="relative shrink-0 ml-1"
+                onMouseEnter={() => openWith("account")}
+                onMouseLeave={scheduleClose}
+              >
+                <button
+                  onClick={() => setOpenMenu(openMenu === "account" ? null : "account")}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full border border-primary/40 text-sm font-semibold text-primary hover:bg-primary hover:text-white hover:border-primary transition-colors"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  {t("nav.signUp")}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${openMenu === "account" ? "rotate-180" : ""}`} />
+                </button>
+                {openMenu === "account" && (
+                  <div
+                    className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 z-50"
+                    onMouseEnter={cancelClose}
+                    onMouseLeave={scheduleClose}
+                  >
+                    <Link href="/login" onClick={closeAll}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                      <LogIn className="w-4 h-4" /> {t("nav.signIn")}
+                    </Link>
+                    <Link href="/signup" onClick={closeAll}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                      <UserPlus className="w-4 h-4" /> {t("nav.createAccount")}
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
@@ -416,7 +443,7 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
-                placeholder="Search products..."
+                placeholder={t("nav.searchProductsPlaceholder")}
                 className="h-11 w-full rounded-md border border-input bg-muted/20 pl-10 pr-4 text-base focus:outline-none focus:ring-1 focus:ring-primary"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -424,42 +451,47 @@ export function Header() {
             </form>
 
             <nav className="flex flex-col gap-1 mb-4">
-              <Link href="/" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
-              <Link href="/products" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>All Products</Link>
+              <Link href="/" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>{t("nav.home")}</Link>
+              <Link href="/products" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>{t("nav.allProducts")}</Link>
 
-              <p className="text-xs font-bold uppercase tracking-widest text-primary px-3 pt-3 pb-1">Specialties</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary px-3 pt-3 pb-1">{t("nav.specialties")}</p>
               {specialtiesLinks.map((s) => (
                 <Link key={s.href} href={s.href} className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                   {s.label}
                 </Link>
               ))}
 
-              <Link href="/about" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+              <Link href="/about" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>{t("nav.aboutUs")}</Link>
 
               <div className="border-t border-gray-100 mt-2 pt-2">
                 {isAuthenticated ? (
                   <>
-                    <p className="text-xs font-bold uppercase tracking-widest text-primary px-3 pt-1 pb-1">Account</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary px-3 pt-1 pb-1">{t("nav.account")}</p>
                     <Link href="/account" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                      <LayoutDashboard className="w-4 h-4" /> My Dashboard
+                      <LayoutDashboard className="w-4 h-4" /> {t("nav.myDashboard")}
                     </Link>
                     <button
                       onClick={() => { logout(); setIsMenuOpen(false); }}
                       className="w-full text-left text-base font-medium px-3 py-2 rounded-md text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                     >
-                      <LogOut className="w-4 h-4" /> Sign out
+                      <LogOut className="w-4 h-4" /> {t("nav.signOut")}
                     </button>
                   </>
                 ) : (
                   <>
                     <Link href="/login" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                      <LogIn className="w-4 h-4" /> Sign in
+                      <LogIn className="w-4 h-4" /> {t("nav.signIn")}
                     </Link>
                     <Link href="/signup" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                      <UserPlus className="w-4 h-4" /> Create account
+                      <UserPlus className="w-4 h-4" /> {t("nav.createAccount")}
                     </Link>
                   </>
                 )}
+              </div>
+
+              {/* Mobile language picker */}
+              <div className="border-t border-gray-100 mt-2 pt-2">
+                <LanguageSwitcher variant="mobile" />
               </div>
             </nav>
 
@@ -469,7 +501,7 @@ export function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               <MessageSquare className="h-5 w-5" />
-              Request a Quote
+              {t("nav.requestQuote")}
             </a>
           </div>
         </div>
