@@ -5,10 +5,14 @@ import categoriesRouter from "./categories";
 import cartRouter from "./cart";
 import ordersRouter from "./orders";
 import statsRouter from "./stats";
+import authRouter from "./auth";
+import accountRouter from "./account";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
+router.use(accountRouter);
 router.use(productsRouter);
 router.use(categoriesRouter);
 router.use(cartRouter);

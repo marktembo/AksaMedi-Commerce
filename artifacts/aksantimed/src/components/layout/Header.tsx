@@ -6,10 +6,12 @@ import {
   Pill, ShieldCheck, Heart, Activity, Microscope,
   Layers, HeartPulse, Zap, Package, Wind, Eye,
   Baby, Star, Syringe, Building, ArrowRight,
+  User, LogOut, LayoutDashboard, LogIn, UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetCart } from "@workspace/api-client-react";
 import { getSessionId } from "@/lib/session";
+import { useAuth } from "@/contexts/AuthContext";
 
 const shopColumns = [
   {
@@ -69,7 +71,7 @@ const specialtiesLinks = [
   { href: "/surgery", label: "Surgery", desc: "Instruments, disposables & anaesthesia", icon: Scissors },
 ];
 
-type OpenMenu = "shop" | "specialties" | null;
+type OpenMenu = "shop" | "specialties" | "account" | null;
 
 export function Header() {
   const [location, setLocation] = useLocation();
@@ -77,6 +79,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const sessionId = getSessionId();
   const { data: cart } = useGetCart(
@@ -326,6 +329,60 @@ export function Header() {
               Request a Quote
             </a>
 
+            {/* Account */}
+            {isAuthenticated ? (
+              <div
+                className="relative shrink-0 ml-1"
+                onMouseEnter={() => openWith("account")}
+                onMouseLeave={scheduleClose}
+              >
+                <button
+                  onClick={() => setOpenMenu(openMenu === "account" ? null : "account")}
+                  className="flex items-center justify-center h-9 w-9 rounded-full bg-[#8B0000] text-white text-sm font-bold hover:bg-[#6d0000] transition-colors"
+                  title={user?.fullName}
+                >
+                  {user?.fullName?.charAt(0)?.toUpperCase() ?? <User className="h-4 w-4" />}
+                </button>
+                {openMenu === "account" && (
+                  <div
+                    className="absolute right-0 top-full mt-2 w-56 bg-white border border-border rounded-2xl shadow-2xl p-2 z-50"
+                    onMouseEnter={cancelClose}
+                    onMouseLeave={scheduleClose}
+                  >
+                    <div className="px-3 py-2.5 border-b border-gray-100 mb-1">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName}</p>
+                      <p className="text-xs text-gray-400 truncate">{user?.companyName}</p>
+                    </div>
+                    <Link href="/account" onClick={closeAll}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                      <LayoutDashboard className="w-4 h-4" /> My Dashboard
+                    </Link>
+                    <Link href="/account" onClick={closeAll}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                      <User className="w-4 h-4" /> Profile
+                    </Link>
+                    <button
+                      onClick={() => { logout(); closeAll(); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors mt-1"
+                    >
+                      <LogOut className="w-4 h-4" /> Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 shrink-0 ml-1">
+                <Link href="/login" onClick={closeAll}
+                  className="flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-medium text-gray-600 hover:text-primary hover:bg-primary/5 transition-colors">
+                  <LogIn className="w-3.5 h-3.5" /> Sign in
+                </Link>
+                <Link href="/signup" onClick={closeAll}
+                  className="flex items-center gap-1.5 px-3 h-9 rounded-full border border-primary/30 text-sm font-medium text-primary hover:bg-primary hover:text-white transition-colors">
+                  <UserPlus className="w-3.5 h-3.5" /> Register
+                </Link>
+              </div>
+            )}
+
             {/* Cart */}
             <Link href="/cart" className="relative group shrink-0 ml-1" onClick={closeAll}>
               <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-200">
@@ -378,6 +435,32 @@ export function Header() {
               ))}
 
               <Link href="/about" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+
+              <div className="border-t border-gray-100 mt-2 pt-2">
+                {isAuthenticated ? (
+                  <>
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary px-3 pt-1 pb-1">Account</p>
+                    <Link href="/account" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                      <LayoutDashboard className="w-4 h-4" /> My Dashboard
+                    </Link>
+                    <button
+                      onClick={() => { logout(); setIsMenuOpen(false); }}
+                      className="w-full text-left text-base font-medium px-3 py-2 rounded-md text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" /> Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                      <LogIn className="w-4 h-4" /> Sign in
+                    </Link>
+                    <Link href="/signup" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                      <UserPlus className="w-4 h-4" /> Create account
+                    </Link>
+                  </>
+                )}
+              </div>
             </nav>
 
             <a

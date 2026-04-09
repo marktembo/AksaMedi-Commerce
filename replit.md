@@ -42,6 +42,36 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `products` — Medical products with pricing, stock, prescription flag
 - `cart_items` — Session-based cart items
 - `orders` + `order_items` — Customer orders
+- `users` — Business client accounts (clinics, hospitals, practices)
+- `saved_products` — Products saved/bookmarked by each user
+- `user_inquiries` — Quote inquiry history per user
+
+## Authentication System
+
+JWT-based auth. Token stored in `localStorage` under `aksantimed_auth_token`.
+
+- **Auth routes** (backend): `artifacts/api-server/src/routes/auth.ts`
+  - `POST /api/auth/register` — Create account
+  - `POST /api/auth/login` — Login, returns JWT
+  - `GET /api/auth/me` — Get current user (requires Bearer token)
+  - `PUT /api/auth/profile` — Update profile
+  - `POST /api/auth/change-password` — Change password
+  - `POST /api/auth/forgot-password` — Request reset token
+  - `POST /api/auth/reset-password` — Reset via token
+
+- **Account routes** (backend): `artifacts/api-server/src/routes/account.ts`
+  - `GET/POST /api/account/saved-products` — Saved product list
+  - `DELETE /api/account/saved-products/:id` — Remove saved
+  - `GET/POST /api/account/inquiries` — Inquiry history
+
+- **Auth helper**: `artifacts/api-server/src/lib/auth.ts` — JWT sign/verify, bcrypt, requireAuth middleware
+
+- **Frontend context**: `artifacts/aksantimed/src/contexts/AuthContext.tsx`
+- **Frontend API helpers**: `artifacts/aksantimed/src/lib/auth-api.ts`
+- **Protected route**: `artifacts/aksantimed/src/components/auth/ProtectedRoute.tsx`
+
+- **Pages**: LoginPage, SignUpPage, ForgotPasswordPage, DashboardPage
+- **Routes**: `/login`, `/signup`, `/forgot-password`, `/account` (protected)
 
 ## Key Commands
 
