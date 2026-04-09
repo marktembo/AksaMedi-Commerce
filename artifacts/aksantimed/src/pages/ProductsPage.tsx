@@ -3,7 +3,6 @@ import { useLocation, Link } from "wouter";
 import { useListProducts, useListCategories } from "@workspace/api-client-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { InquiryDrawer } from "@/components/product/InquiryDrawer";
-import { FloatingWhatsApp } from "@/components/ui/FloatingWhatsApp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -393,8 +392,6 @@ export default function ProductsPage() {
         onClose={() => setInquiryOpen(false)}
       />
 
-      {/* Floating WhatsApp */}
-      <FloatingWhatsApp />
     </div>
   );
 }
