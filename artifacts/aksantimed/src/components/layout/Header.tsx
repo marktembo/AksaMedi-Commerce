@@ -40,19 +40,8 @@ export function Header() {
             <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-11" />
           </Link>
 
-          {/* Right-hand cluster: search + nav + quote + cart */}
-          <div className="hidden md:flex items-center gap-6 flex-1 justify-end">
-            {/* Search */}
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                placeholder="Search products..."
-                className="h-10 w-56 rounded-full border border-input bg-muted/30 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
+          {/* Right-hand cluster: nav + search + quote + cart */}
+          <div className="hidden md:flex items-center gap-5 flex-1 justify-end">
 
             {/* Nav links */}
             <nav className="flex items-center gap-5 text-sm font-medium">
@@ -69,10 +58,25 @@ export function Header() {
               ))}
             </nav>
 
+            {/* Divider */}
+            <div className="h-6 w-px bg-border shrink-0" />
+
+            {/* Search — integrated with actions */}
+            <form onSubmit={handleSearch} className="relative shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="search"
+                placeholder="Search..."
+                className="h-9 w-40 rounded-full border border-input bg-muted/40 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:w-52 transition-all duration-300"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+
             {/* Request a Quote CTA */}
             <a
               href="mailto:info@aksantimed.com?subject=Quote Request"
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 h-10 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shrink-0"
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shrink-0"
             >
               <MessageSquare className="h-4 w-4" />
               Request a Quote
@@ -80,11 +84,11 @@ export function Header() {
 
             {/* Cart icon */}
             <Link href="/cart" className="relative group shrink-0">
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-200">
-                <ShoppingCart className="h-5 w-5" />
+              <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+                <ShoppingCart className="h-4 w-4" />
               </div>
               {cart && cart.itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white ring-2 ring-white">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white ring-2 ring-white">
                   {cart.itemCount}
                 </span>
               )}
