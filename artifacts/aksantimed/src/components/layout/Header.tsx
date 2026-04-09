@@ -152,45 +152,100 @@ export function Header() {
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${openMenu === "shop" ? "rotate-180" : ""}`} />
                 </button>
 
-                {/* Mega menu panel */}
+                {/* Mega menu panel — full-width fixed below header */}
                 {openMenu === "shop" && (
                   <div
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[820px] bg-white border border-border rounded-2xl shadow-2xl p-6 z-50"
+                    className="fixed left-0 right-0 top-20 z-50 shadow-2xl border-t border-border"
                     onMouseEnter={cancelClose}
                     onMouseLeave={scheduleClose}
                   >
-                    {/* Top: columns */}
-                    <div className="grid grid-cols-5 gap-6">
-                      {shopColumns.map((col) => (
-                        <div key={col.heading}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">{col.heading}</p>
-                          <ul className="space-y-1">
-                            {col.items.map((item) => (
-                              <li key={item.slug}>
-                                <Link
-                                  href={`/products?categorySlug=${item.slug}`}
-                                  onClick={closeAll}
-                                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors group"
-                                >
-                                  <item.icon className="h-3.5 w-3.5 text-primary/60 group-hover:text-primary shrink-0" />
-                                  <span className="leading-tight">{item.label}</span>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
+                    <div className="flex">
+
+                      {/* Left: maroon feature panel */}
+                      <div className="w-64 shrink-0 bg-primary text-white flex flex-col p-7 gap-6">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50 mb-2">Browse</p>
+                          <h3 className="text-xl font-bold font-serif leading-tight">Medical Supply Catalog</h3>
+                          <p className="text-white/60 text-xs mt-2 leading-relaxed">128+ verified products across 24 specialty categories.</p>
                         </div>
-                      ))}
-                    </div>
-                    {/* Footer bar */}
-                    <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">128+ products across 24 categories</p>
-                      <Link
-                        href="/products"
-                        onClick={closeAll}
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-                      >
-                        View All Products <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
+
+                        {/* Featured picks */}
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Popular</p>
+                          {specialtiesLinks.map((s) => (
+                            <Link
+                              key={s.href}
+                              href={s.href}
+                              onClick={closeAll}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors group"
+                            >
+                              <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors">
+                                <s.icon className="h-4 w-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-white">{s.label}</p>
+                                <p className="text-[10px] text-white/50 leading-tight">{s.desc}</p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+
+                        <Link
+                          href="/products"
+                          onClick={closeAll}
+                          className="mt-auto flex items-center justify-center gap-2 h-9 rounded-full bg-white/15 hover:bg-white/25 text-white text-sm font-semibold transition-colors border border-white/20"
+                        >
+                          View All Products <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+
+                      {/* Right: category columns */}
+                      <div className="flex-1 bg-white px-8 py-7">
+                        <div className="grid grid-cols-5 gap-6 max-w-6xl">
+                          {shopColumns.map((col) => (
+                            <div key={col.heading}>
+                              {/* Column heading with accent bar */}
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="h-3.5 w-1 rounded-full bg-primary shrink-0" />
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">{col.heading}</p>
+                              </div>
+                              <ul className="space-y-0.5">
+                                {col.items.map((item) => (
+                                  <li key={item.slug}>
+                                    <Link
+                                      href={`/products?categorySlug=${item.slug}`}
+                                      onClick={closeAll}
+                                      className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground/70 hover:text-primary hover:bg-primary/5 transition-all duration-150"
+                                    >
+                                      <div className="h-6 w-6 rounded-md bg-primary/10 group-hover:bg-primary/15 flex items-center justify-center shrink-0 transition-colors">
+                                        <item.icon className="h-3.5 w-3.5 text-primary/70 group-hover:text-primary" />
+                                      </div>
+                                      <span className="leading-tight font-medium">{item.label}</span>
+                                      <ArrowRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 text-primary transition-opacity shrink-0" />
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Bottom bar */}
+                        <div className="mt-6 pt-5 border-t border-border/60 flex items-center justify-between">
+                          <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Verified manufacturers</span>
+                            <span className="flex items-center gap-1.5"><HeartPulse className="h-3.5 w-3.5 text-primary" /> 128+ products</span>
+                            <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-primary" /> Pan-African delivery</span>
+                          </div>
+                          <a
+                            href="mailto:info@aksantimed.com?subject=Quote Request"
+                            onClick={closeAll}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary border border-primary/20 bg-primary/5 rounded-full px-4 h-7 hover:bg-primary hover:text-white transition-colors"
+                          >
+                            <MessageSquare className="h-3 w-3" /> Request a Quote
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
