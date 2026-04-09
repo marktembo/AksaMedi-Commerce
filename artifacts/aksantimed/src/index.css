@@ -112,8 +112,8 @@
   --chart-4: 280 40% 50%;
   --chart-5: 340 40% 50%;
 
-  --app-font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --app-font-serif: 'Playfair Display', Georgia, serif;
+  --app-font-sans: 'Inter', sans-serif;
+  --app-font-serif: 'Poppins', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
   
   --radius: 0.5rem;
