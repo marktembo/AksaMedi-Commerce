@@ -126,9 +126,6 @@ export function Header() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex h-16 items-center gap-6">
 
-          {/* Logo + Nav group — left side */}
-          <div className="flex items-center gap-10">
-
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 pl-2 transition-opacity hover:opacity-90" onClick={closeAll}>
             <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-10 w-10 rounded-lg object-contain" />
@@ -137,8 +134,8 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav — left-aligned */}
-          <nav className="hidden md:flex items-center gap-0.5 text-sm font-medium">
+          {/* Desktop nav — right-aligned, close to actions */}
+          <nav className="hidden md:flex items-center gap-0.5 text-sm font-medium ml-auto">
 
               {/* Home */}
               <Link
@@ -313,10 +310,8 @@ export function Header() {
               </Link>
             </nav>
 
-          </div>{/* end Logo+Nav group */}
-
           {/* Right actions */}
-          <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
+          <div className="hidden md:flex items-center gap-1.5 shrink-0">
 
             {/* Search — icon toggle */}
             {searchOpen ? (
