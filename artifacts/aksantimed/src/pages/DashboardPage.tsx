@@ -12,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSavedProducts } from "@/contexts/SavedProductsContext";
 import {
   apiUpdateProfile, apiChangePassword,
-  apiGetSavedProducts, apiUnsaveProduct,
-  apiGetInquiries, type SavedProduct, type UserInquiry
+  apiGetInquiries, type UserInquiry
 } from "@/lib/auth-api";
 import { useTranslation } from "react-i18next";
 
@@ -53,9 +53,8 @@ export default function DashboardPage() {
   const [passwordError, setPasswordError] = useState("");
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
-  const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
+  const { savedRecords: savedProducts, removeSaved, isLoading: loadingSaved } = useSavedProducts();
   const [inquiries, setInquiries] = useState<UserInquiry[]>([]);
-  const [loadingSaved, setLoadingSaved] = useState(false);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
 
   const profileForm = useForm<ProfileFormData>({
@@ -84,10 +83,6 @@ export default function DashboardPage() {
   }, [user]);
 
   useEffect(() => {
-    if (activeTab === "saved" && token) {
-      setLoadingSaved(true);
-      apiGetSavedProducts(token).then(setSavedProducts).finally(() => setLoadingSaved(false));
-    }
     if (activeTab === "inquiries" && token) {
       setLoadingInquiries(true);
       apiGetInquiries(token).then(setInquiries).finally(() => setLoadingInquiries(false));
@@ -125,12 +120,6 @@ export default function DashboardPage() {
     } finally {
       setPasswordSaving(false);
     }
-  };
-
-  const removeSaved = async (id: number) => {
-    if (!token) return;
-    await apiUnsaveProduct(token, id);
-    setSavedProducts((p) => p.filter((s) => s.id !== id));
   };
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [

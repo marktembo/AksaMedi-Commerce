@@ -99,6 +99,8 @@
     "requestQuote": "Solicitar cotización",
     "addToInquiry": "Añadir a la lista de consultas",
     "addedToInquiry": "Añadido a la consulta",
+    "saveForLater": "Guardar para más tarde",
+    "unsave": "Eliminar de guardados",
     "medicalSupply": "Suministro médico"
   },
   "auth": {

@@ -99,6 +99,8 @@
     "requestQuote": "Demander un devis",
     "addToInquiry": "Ajouter à la liste de demandes",
     "addedToInquiry": "Ajouté à la demande",
+    "saveForLater": "Sauvegarder pour plus tard",
+    "unsave": "Retirer des sauvegardés",
     "medicalSupply": "Fourniture médicale"
   },
   "auth": {

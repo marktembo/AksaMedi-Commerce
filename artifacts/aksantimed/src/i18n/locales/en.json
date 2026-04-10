@@ -99,6 +99,8 @@
     "requestQuote": "Request a Quote",
     "addToInquiry": "Add to Inquiry List",
     "addedToInquiry": "Added to Inquiry",
+    "saveForLater": "Save for later",
+    "unsave": "Remove from saved",
     "medicalSupply": "Medical Supply"
   },
   "auth": {
