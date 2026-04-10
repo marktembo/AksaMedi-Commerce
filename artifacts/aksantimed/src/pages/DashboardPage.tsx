@@ -6,7 +6,8 @@ import { z } from "zod";
 import {
   User, Package, FileText, LogOut, Edit2, Save, X,
   Bookmark, Trash2, Mail, Phone, Building2, Briefcase,
-  Clock, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff
+  Clock, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff,
+  HeartPulse, ChevronRight, MessageSquare, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSavedProducts } from "@/contexts/SavedProductsContext";
 import {
   apiUpdateProfile, apiChangePassword,
-  apiGetInquiries, type UserInquiry
+  apiGetInquiries, apiDeleteInquiry, type UserInquiry
 } from "@/lib/auth-api";
 import { useTranslation } from "react-i18next";
 
@@ -57,6 +58,31 @@ export default function DashboardPage() {
   const [inquiries, setInquiries] = useState<UserInquiry[]>([]);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
 
+  const fetchInquiries = () => {
+    if (!token) return;
+    setLoadingInquiries(true);
+    apiGetInquiries(token).then(setInquiries).finally(() => setLoadingInquiries(false));
+  };
+
+  const handleDeleteInquiry = async (id: number) => {
+    if (!token) return;
+    await apiDeleteInquiry(token, id);
+    setInquiries((prev) => prev.filter((q) => q.id !== id));
+  };
+
+  const groupedInquiries = (() => {
+    const groups: Record<string, UserInquiry[]> = {};
+    const noGroupKey = "__no_group__";
+    inquiries.forEach((inq) => {
+      const key = inq.submissionId ?? `${noGroupKey}_${inq.id}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(inq);
+    });
+    return Object.entries(groups)
+      .map(([key, items]) => ({ key, items, isGroup: !key.startsWith(noGroupKey) }))
+      .sort((a, b) => new Date(b.items[0].createdAt).getTime() - new Date(a.items[0].createdAt).getTime());
+  })();
+
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -84,8 +110,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (activeTab === "inquiries" && token) {
-      setLoadingInquiries(true);
-      apiGetInquiries(token).then(setInquiries).finally(() => setLoadingInquiries(false));
+      fetchInquiries();
     }
   }, [activeTab, token]);
 
@@ -344,15 +369,34 @@ export default function DashboardPage() {
 
             {activeTab === "inquiries" && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">{t("dashboard.inquiryHistory")}</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900">{t("dashboard.inquiryHistory")}</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={fetchInquiries}
+                      disabled={loadingInquiries}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                      title="Refresh"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loadingInquiries ? "animate-spin" : ""}`} />
+                    </button>
+                    <Link href="/products">
+                      <Button size="sm" className="bg-[#8B0000] hover:bg-[#6d0000] text-white rounded-full gap-1.5 text-xs">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        New Inquiry
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
                 {loadingInquiries ? (
                   <div className="text-center py-12 text-gray-400 text-sm">Loading…</div>
                 ) : inquiries.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 font-medium">{t("dashboard.noInquiries")}</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      {t("dashboard.noInquiriesDesc")}
+                    <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
+                      Browse the catalog, add products to your inquiry list, and submit — they'll appear here.
                     </p>
                     <Link href="/products">
                       <Button className="mt-4 bg-[#8B0000] hover:bg-[#6d0000] text-white" size="sm">
@@ -361,23 +405,92 @@ export default function DashboardPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {inquiries.map((inq) => (
-                      <div key={inq.id} className="p-4 rounded-xl border border-gray-100">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="font-medium text-gray-900 text-sm">{inq.productName}</p>
-                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-                            inq.status === "sent"
-                              ? "bg-blue-50 text-blue-600"
-                              : "bg-green-50 text-green-600"
-                          }`}>
-                            {inq.status === "sent" ? t("dashboard.sent") : t("dashboard.responded")}
-                          </span>
+                  <div className="space-y-4">
+                    {groupedInquiries.map(({ key, items, isGroup }) => {
+                      const first = items[0];
+                      const allSent = items.every((i) => i.status === "sent");
+                      const allResponded = items.every((i) => i.status === "responded");
+
+                      return (
+                        <div key={key} className="border border-gray-100 rounded-xl overflow-hidden">
+                          {/* Submission header */}
+                          <div className="flex items-center justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-100">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-8 w-8 rounded-full bg-[#8B0000]/10 flex items-center justify-center shrink-0">
+                                <MessageSquare className="h-4 w-4 text-[#8B0000]" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {isGroup
+                                    ? `Inquiry — ${items.length} product${items.length > 1 ? "s" : ""}`
+                                    : first.productName}
+                                </p>
+                                <p className="text-xs text-gray-400">{formatDate(first.createdAt)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                                allResponded
+                                  ? "bg-green-50 text-green-600"
+                                  : allSent
+                                  ? "bg-blue-50 text-blue-600"
+                                  : "bg-amber-50 text-amber-600"
+                              }`}>
+                                {allResponded ? "Responded" : allSent ? "Sent" : "In Progress"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Products list */}
+                          <div className="divide-y divide-gray-50">
+                            {items.map((inq) => (
+                              <div key={inq.id} className="flex items-center gap-3 px-4 py-3">
+                                <div className="h-9 w-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                                  <HeartPulse className="h-4 w-4 text-primary opacity-50" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 truncate">{inq.productName}</p>
+                                  {inq.productSku && (
+                                    <p className="text-xs text-gray-400">SKU: {inq.productSku}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {inq.productId && (
+                                    <Link href={`/products/${inq.productId}`}>
+                                      <button className="p-1.5 rounded-lg text-gray-400 hover:text-[#8B0000] hover:bg-[#8B0000]/5 transition-colors" title="View product">
+                                        <ChevronRight className="w-3.5 h-3.5" />
+                                      </button>
+                                    </Link>
+                                  )}
+                                  <button
+                                    onClick={() => handleDeleteInquiry(inq.id)}
+                                    className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    title="Remove"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Message + contact footer */}
+                          {(first.message || first.contactCompany) && (
+                            <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100">
+                              {first.contactName && (
+                                <p className="text-xs text-gray-500 mb-1">
+                                  <span className="font-medium">From:</span> {first.contactName}
+                                  {first.contactCompany && ` — ${first.contactCompany}`}
+                                </p>
+                              )}
+                              {first.message && (
+                                <p className="text-xs text-gray-500 line-clamp-2 italic">"{first.message}"</p>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 line-clamp-2">{inq.message}</p>
-                        <p className="text-xs text-gray-400 mt-2">{formatDate(inq.createdAt)}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

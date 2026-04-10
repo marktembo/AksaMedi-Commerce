@@ -9,6 +9,7 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SavedProductsProvider } from "./contexts/SavedProductsContext";
+import { InquiryProvider } from "./contexts/InquiryContext";
 import { ScrollToTopButton } from "./components/ScrollToTopButton";
 
 const HomePage          = lazy(() => import("./pages/HomePage"));
@@ -86,9 +87,11 @@ function App() {
       <TooltipProvider>
         <AuthProvider>
           <SavedProductsProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
+            <InquiryProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+            </InquiryProvider>
           </SavedProductsProvider>
         </AuthProvider>
         <Toaster />

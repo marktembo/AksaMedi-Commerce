@@ -5,18 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSavedProducts } from "@/contexts/SavedProductsContext";
+import { useInquiry } from "@/contexts/InquiryContext";
 
 interface ProductCardProps {
   product: Product;
-  onAddToInquiry?: (product: Product) => void;
-  inInquiry?: boolean;
 }
 
-export function ProductCard({ product, onAddToInquiry, inInquiry = false }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { isSaved, toggleSave } = useSavedProducts();
+  const { addToInquiry, isInInquiry } = useInquiry();
   const [, navigate] = useLocation();
+
+  const inInquiry = isInInquiry(product.id);
 
   const saved = isSaved(product.id);
 
@@ -142,7 +144,7 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
           {/* Add to Inquiry + Save row */}
           <div className="flex gap-2">
             <button
-              onClick={(e) => { e.stopPropagation(); onAddToInquiry?.(product); }}
+              onClick={(e) => { e.stopPropagation(); addToInquiry(product); }}
               className={`flex items-center justify-center gap-1.5 flex-1 h-8 rounded-full text-xs font-semibold border transition-all ${
                 inInquiry
                   ? "bg-primary/10 border-primary/30 text-primary"

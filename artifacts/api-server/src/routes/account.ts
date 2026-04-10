@@ -16,7 +16,25 @@ const saveProductSchema = z.object({
 const addInquirySchema = z.object({
   productId: z.number().int().positive().optional(),
   productName: z.string().min(1),
+  productSku: z.string().optional(),
   message: z.string().min(1),
+  submissionId: z.string().optional(),
+  contactName: z.string().optional(),
+  contactPhone: z.string().optional(),
+  contactCompany: z.string().optional(),
+});
+
+const bulkInquirySchema = z.object({
+  submissionId: z.string().min(1),
+  products: z.array(z.object({
+    productId: z.number().int().positive().optional(),
+    productName: z.string().min(1),
+    productSku: z.string().optional(),
+  })).min(1),
+  message: z.string().min(1),
+  contactName: z.string().optional(),
+  contactPhone: z.string().optional(),
+  contactCompany: z.string().optional(),
 });
 
 router.get("/account/saved-products", requireAuth, async (req, res): Promise<void> => {
@@ -95,12 +113,54 @@ router.post("/account/inquiries", requireAuth, async (req, res): Promise<void> =
 
   const [inquiry] = await db.insert(userInquiriesTable).values({
     userId: req.userId!,
+    submissionId: parsed.data.submissionId ?? null,
     productId: parsed.data.productId ?? null,
     productName: parsed.data.productName,
+    productSku: parsed.data.productSku ?? null,
     message: parsed.data.message,
+    contactName: parsed.data.contactName ?? null,
+    contactPhone: parsed.data.contactPhone ?? null,
+    contactCompany: parsed.data.contactCompany ?? null,
   }).returning();
 
   res.status(201).json(inquiry);
+});
+
+router.post("/account/inquiries/bulk", requireAuth, async (req, res): Promise<void> => {
+  const parsed = bulkInquirySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.errors[0]?.message ?? "Invalid input" });
+    return;
+  }
+
+  const rows = parsed.data.products.map((p) => ({
+    userId: req.userId!,
+    submissionId: parsed.data.submissionId,
+    productId: p.productId ?? null,
+    productName: p.productName,
+    productSku: p.productSku ?? null,
+    message: parsed.data.message,
+    contactName: parsed.data.contactName ?? null,
+    contactPhone: parsed.data.contactPhone ?? null,
+    contactCompany: parsed.data.contactCompany ?? null,
+  }));
+
+  const inserted = await db.insert(userInquiriesTable).values(rows).returning();
+  res.status(201).json(inserted);
+});
+
+router.delete("/account/inquiries/:id", requireAuth, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  await db
+    .delete(userInquiriesTable)
+    .where(and(eq(userInquiriesTable.id, id), eq(userInquiriesTable.userId, req.userId!)));
+
+  res.status(204).send();
 });
 
 export default router;

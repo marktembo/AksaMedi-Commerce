@@ -25,9 +25,14 @@ export interface SavedProduct {
 export interface UserInquiry {
   id: number;
   userId: number;
+  submissionId: string | null;
   productId: number | null;
   productName: string;
+  productSku: string | null;
   message: string;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactCompany: string | null;
   status: string;
   createdAt: string;
 }
@@ -114,7 +119,30 @@ export async function apiGetInquiries(token: string): Promise<UserInquiry[]> {
 export async function apiAddInquiry(token: string, inquiry: {
   productId?: number;
   productName: string;
+  productSku?: string;
   message: string;
+  submissionId?: string;
+  contactName?: string;
+  contactPhone?: string;
+  contactCompany?: string;
 }): Promise<UserInquiry> {
   return request("/account/inquiries", { method: "POST", body: JSON.stringify(inquiry) }, token);
+}
+
+export async function apiSubmitBulkInquiry(token: string, payload: {
+  submissionId: string;
+  products: { productId?: number; productName: string; productSku?: string }[];
+  message: string;
+  contactName?: string;
+  contactPhone?: string;
+  contactCompany?: string;
+}): Promise<UserInquiry[]> {
+  return request("/account/inquiries/bulk", { method: "POST", body: JSON.stringify(payload) }, token);
+}
+
+export async function apiDeleteInquiry(token: string, id: number): Promise<void> {
+  await fetch(`${API_BASE}/account/inquiries/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }

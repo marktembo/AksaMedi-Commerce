@@ -6,7 +6,7 @@ import { InquiryDrawer } from "@/components/product/InquiryDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Product } from "@workspace/api-client-react";
+import { useInquiry } from "@/contexts/InquiryContext";
 import {
   Search, SlidersHorizontal, ChevronRight, MessageSquare,
   ShieldCheck, Truck, HeadphonesIcon, Award, PackageSearch,
@@ -32,6 +32,7 @@ import { useTranslation } from "react-i18next";
 export default function ProductsPage() {
   const { t } = useTranslation();
   const [location] = useLocation();
+  const { inquiryProducts, openInquiry } = useInquiry();
 
   const searchParams = new URLSearchParams(window.location.search);
   const initialCategory = searchParams.get("categorySlug") || searchParams.get("category");
@@ -43,22 +44,6 @@ export default function ProductsPage() {
   const [sortOrder, setSortOrder] = useState<string>("featured");
   const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
-
-  // Inquiry system
-  const [inquiryProducts, setInquiryProducts] = useState<Product[]>([]);
-  const [inquiryOpen, setInquiryOpen] = useState(false);
-
-  const addToInquiry = (product: Product) => {
-    setInquiryProducts((prev) => {
-      if (prev.find((p) => p.id === product.id)) {
-        return prev.filter((p) => p.id !== product.id);
-      }
-      return [...prev, product];
-    });
-  };
-
-  const removeFromInquiry = (id: number) => setInquiryProducts((prev) => prev.filter((p) => p.id !== id));
-  const clearInquiry = () => setInquiryProducts([]);
 
   useEffect(() => {
     const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 450);
@@ -206,7 +191,7 @@ export default function ProductsPage() {
             {/* Inquiry summary button */}
             {inquiryProducts.length > 0 && (
               <button
-                onClick={() => setInquiryOpen(true)}
+                onClick={openInquiry}
                 className="flex items-center gap-2.5 rounded-full bg-primary text-white px-5 h-10 text-sm font-bold shadow-lg hover:bg-primary/90 transition-colors shrink-0 animate-in slide-in-from-right-4"
               >
                 <ClipboardList className="h-4 w-4" />
@@ -293,7 +278,7 @@ export default function ProductsPage() {
 
                 {/* Inquiry list trigger */}
                 <button
-                  onClick={() => setInquiryOpen(true)}
+                  onClick={openInquiry}
                   className={`relative flex items-center gap-1.5 h-9 rounded-lg px-3 text-sm font-medium border transition-colors ${inquiryProducts.length > 0 ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
                 >
                   <MessageSquare className="h-4 w-4" />
@@ -344,8 +329,6 @@ export default function ProductsPage() {
                     <ProductCard
                       key={product.id}
                       product={product}
-                      onAddToInquiry={addToInquiry}
-                      inInquiry={inquiryProducts.some((p) => p.id === product.id)}
                     />
                   ))}
                 </div>
@@ -390,14 +373,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Inquiry Drawer */}
-      <InquiryDrawer
-        products={inquiryProducts}
-        onRemove={removeFromInquiry}
-        onClear={clearInquiry}
-        open={inquiryOpen}
-        onClose={() => setInquiryOpen(false)}
-      />
+      <InquiryDrawer />
 
     </div>
   );
