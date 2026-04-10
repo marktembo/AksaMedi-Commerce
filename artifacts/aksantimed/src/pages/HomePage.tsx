@@ -26,7 +26,9 @@ export default function HomePage() {
         <div className="absolute inset-0 z-0">
           <img 
             src="/images/hero-banner.png" 
-            alt="Aksantimed Medical Professional" 
+            alt="Aksantimed Medical Professional"
+            fetchPriority="high"
+            decoding="sync"
             className="w-full h-full object-cover opacity-30 mix-blend-overlay"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-transparent" />

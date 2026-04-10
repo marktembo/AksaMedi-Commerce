@@ -43,6 +43,8 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
           <img
             src={product.imageUrl}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
