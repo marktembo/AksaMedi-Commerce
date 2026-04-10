@@ -28,6 +28,7 @@ const LoginPage           = lazy(() => import("./pages/LoginPage"));
 const SignUpPage          = lazy(() => import("./pages/SignUpPage"));
 const ForgotPasswordPage  = lazy(() => import("./pages/ForgotPasswordPage"));
 const DashboardPage       = lazy(() => import("./pages/DashboardPage"));
+const ContactPage         = lazy(() => import("./pages/ContactPage"));
 const NotFound            = lazy(() => import("./pages/not-found"));
 const AdminLoginPage      = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboardPage  = lazy(() => import("./pages/AdminDashboardPage"));
@@ -118,6 +119,7 @@ function Router() {
             <Route path="/order-confirmation/:id" component={OrderConfirmation} />
             <Route path="/login"                  component={LoginPage} />
             <Route path="/signup"                 component={SignUpPage} />
+            <Route path="/contact"                component={ContactPage} />
             <Route path="/forgot-password"        component={ForgotPasswordPage} />
             <Route path="/account">
               {() => <ProtectedRoute component={DashboardPage} />}

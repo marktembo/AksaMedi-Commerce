@@ -303,6 +303,15 @@ export function Header() {
               >
                 {t("nav.aboutUs")}
               </Link>
+
+              {/* Contact */}
+              <Link
+                href="/contact"
+                onClick={closeAll}
+                className={`px-3.5 py-2 rounded-md whitespace-nowrap transition-colors hover:text-primary hover:bg-primary/5 ${isActive("/contact") ? "text-primary font-semibold" : "text-foreground/70"}`}
+              >
+                {t("nav.contact")}
+              </Link>
             </nav>
 
           {/* Right actions */}
@@ -473,6 +482,7 @@ export function Header() {
               ))}
 
               <Link href="/about" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>{t("nav.aboutUs")}</Link>
+              <Link href="/contact" className="text-base font-medium px-3 py-2 rounded-md hover:bg-muted hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>{t("nav.contact")}</Link>
 
               <div className="border-t border-gray-100 mt-2 pt-2">
                 {isAuthenticated ? (

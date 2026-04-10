@@ -6,3 +6,4 @@ export * from "./users";
 export * from "./saved_products";
 export * from "./user_inquiries";
 export * from "./quote_requests";
+export * from "./contact_submissions";
