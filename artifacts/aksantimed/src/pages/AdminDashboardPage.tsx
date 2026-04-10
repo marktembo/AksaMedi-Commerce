@@ -85,8 +85,11 @@ const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 const API_BASE = `${BASE}/api`;
 
 async function adminFetch<T>(path: string, token: string, opts: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const sep = path.includes("?") ? "&" : "?";
+  const url = `${API_BASE}${path}${sep}_t=${Date.now()}`;
+  const res = await fetch(url, {
     ...opts,
+    cache: "no-store",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...opts.headers },
   });
   const data = await res.json().catch(() => ({}));
@@ -934,7 +937,27 @@ function InventorySection({
   );
 }
 
-// ─── Requests Section ────────────────────────────────────────────────────────
+// ─── Quote Requests Section ───────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {
+  new:       { label: "New",       dot: "bg-amber-400",  pill: "bg-amber-50 text-amber-700 border-amber-200" },
+  reviewing: { label: "Reviewing", dot: "bg-blue-400",   pill: "bg-blue-50 text-blue-700 border-blue-200" },
+  priced:    { label: "Priced",    dot: "bg-violet-400", pill: "bg-violet-50 text-violet-700 border-violet-200" },
+  sent:      { label: "Sent",      dot: "bg-cyan-400",   pill: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+  approved:  { label: "Approved",  dot: "bg-green-500",  pill: "bg-green-50 text-green-700 border-green-200" },
+  rejected:  { label: "Rejected",  dot: "bg-red-400",    pill: "bg-red-50 text-red-600 border-red-200" },
+  completed: { label: "Completed", dot: "bg-gray-400",   pill: "bg-gray-100 text-gray-600 border-gray-300" },
+};
+
+function QuoteStatusPill({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] ?? { label: status, dot: "bg-gray-400", pill: "bg-gray-100 text-gray-600 border-gray-200" };
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full border font-semibold capitalize ${cfg.pill}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
 
 function RequestsSection({ quotes, loading, fetchQuotes, token }: {
   quotes: AdminQuote[];
@@ -944,20 +967,13 @@ function RequestsSection({ quotes, loading, fetchQuotes, token }: {
 }) {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  // Notes state: quoteId -> text
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [savingNotes, setSavingNotes] = useState<Set<number>>(new Set());
-
-  // Status state
   const [updatingStatus, setUpdatingStatus] = useState<Set<number>>(new Set());
-
-  // Pricing state: quoteId -> { totalAmount, currency, responseMessage }
   const [pricing, setPricing] = useState<Record<number, { totalAmount: string; currency: string; responseMessage: string }>>({});
   const [savingPricing, setSavingPricing] = useState<Set<number>>(new Set());
-
-  // Per-item price state: itemId -> unitPrice string
   const [itemPrices, setItemPrices] = useState<Record<number, string>>({});
   const [savingItemPrice, setSavingItemPrice] = useState<Set<number>>(new Set());
 
@@ -965,19 +981,17 @@ function RequestsSection({ quotes, loading, fetchQuotes, token }: {
     if (filterStatus && q.status !== filterStatus) return false;
     if (search) {
       const s = search.toLowerCase();
-      if (!q.customerName.toLowerCase().includes(s) &&
-        !q.customerEmail.toLowerCase().includes(s) &&
-        !q.requestNumber.toLowerCase().includes(s) &&
-        !(q.companyName ?? "").toLowerCase().includes(s)) return false;
+      return (
+        q.customerName.toLowerCase().includes(s) ||
+        q.customerEmail.toLowerCase().includes(s) ||
+        q.requestNumber.toLowerCase().includes(s) ||
+        (q.companyName ?? "").toLowerCase().includes(s)
+      );
     }
     return true;
   });
 
-  const toggleExpand = (id: number) => setExpanded(s => {
-    const n = new Set(s);
-    if (n.has(id)) n.delete(id); else n.add(id);
-    return n;
-  });
+  const selectedQuote = quotes.find(q => q.id === selectedId) ?? null;
 
   const updateStatus = async (id: number, status: string) => {
     setUpdatingStatus(s => new Set(s).add(id));
@@ -1014,7 +1028,7 @@ function RequestsSection({ quotes, loading, fetchQuotes, token }: {
     }
   };
 
-  const saveItemPrice = async (itemId: number, quoteId: number) => {
+  const saveItemPrice = async (itemId: number) => {
     const price = itemPrices[itemId] ?? "";
     setSavingItemPrice(s => new Set(s).add(itemId));
     try {
@@ -1026,7 +1040,6 @@ function RequestsSection({ quotes, loading, fetchQuotes, token }: {
     } catch { /* silent */ } finally {
       setSavingItemPrice(s => { const n = new Set(s); n.delete(itemId); return n; });
     }
-    void quoteId;
   };
 
   const getPricingField = (q: AdminQuote, field: "totalAmount" | "currency" | "responseMessage") => {
@@ -1040,311 +1053,368 @@ function RequestsSection({ quotes, loading, fetchQuotes, token }: {
     setPricing(p => ({ ...p, [id]: { totalAmount: "", currency: "USD", responseMessage: "", ...p[id], [field]: value } }));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+    <div className="space-y-5">
+      {/* ── Page Header ── */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 font-serif">Quote Requests</h1>
-          <p className="text-gray-500 text-sm">{filtered.length} of {quotes.length} total</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {loading ? "Loading…" : `${filtered.length} of ${quotes.length} request${quotes.length !== 1 ? "s" : ""}`}
+          </p>
         </div>
-        <button onClick={fetchQuotes} disabled={loading} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+        <button
+          onClick={fetchQuotes}
+          disabled={loading}
+          className="flex items-center gap-2 h-9 px-4 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-[#8B0000]/40 hover:text-[#8B0000] transition-colors shadow-sm"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-[#8B0000]" : ""}`} />
+          {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
 
-      {/* Search + Status filters */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3 space-y-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-          <input
-            type="search"
-            placeholder="Search by customer name, email, company, or reference…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 h-9 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]"
-          />
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {["", ...QUOTE_STATUSES].map(s => (
+      {/* ── Status pill counters ── */}
+      <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+        <button
+          onClick={() => setFilterStatus("")}
+          className={`rounded-xl border p-2.5 text-center transition-all hover:shadow-sm ${
+            filterStatus === "" ? "border-[#8B0000] bg-[#8B0000]/5 ring-1 ring-[#8B0000]/20" : "border-gray-100 bg-white"
+          }`}
+        >
+          <p className="text-base font-bold text-gray-900">{quotes.length}</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">All</p>
+        </button>
+        {QUOTE_STATUSES.map(s => {
+          const cfg = STATUS_CONFIG[s];
+          const count = quotes.filter(q => q.status === s).length;
+          return (
             <button
-              key={s || "all"}
-              onClick={() => setFilterStatus(s)}
-              className={`text-xs px-3 py-1 rounded-full border font-semibold transition-colors capitalize ${
-                filterStatus === s
-                  ? "bg-[#8B0000] text-white border-[#8B0000]"
-                  : "border-gray-200 text-gray-500 hover:border-gray-400"
+              key={s}
+              onClick={() => setFilterStatus(filterStatus === s ? "" : s)}
+              className={`rounded-xl border p-2.5 text-center transition-all hover:shadow-sm ${
+                filterStatus === s ? "border-[#8B0000] bg-[#8B0000]/5 ring-1 ring-[#8B0000]/20" : "border-gray-100 bg-white"
               }`}
             >
-              {s || "All"} {s ? `(${quotes.filter(q => q.status === s).length})` : `(${quotes.length})`}
+              <p className="text-base font-bold text-gray-900">{count}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5 leading-tight capitalize">{cfg.label}</p>
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Stats strip */}
-      <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
-        {QUOTE_STATUSES.map(s => (
-          <div
-            key={s}
-            className={`bg-white rounded-xl border p-2.5 text-center cursor-pointer transition-all hover:shadow-sm ${filterStatus === s ? "border-[#8B0000]/40 ring-2 ring-[#8B0000]/10" : "border-gray-100"}`}
-            onClick={() => setFilterStatus(filterStatus === s ? "" : s)}
-          >
-            <p className="text-lg font-bold text-gray-900">{quotes.filter(q => q.status === s).length}</p>
-            <p className="text-[10px] text-gray-400 capitalize mt-0.5 leading-tight">{s}</p>
-          </div>
-        ))}
+      {/* ── Search bar ── */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="search"
+          placeholder="Search by name, email, company, or reference number…"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setSelectedId(null); }}
+          className="w-full pl-10 pr-4 h-10 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000] shadow-sm"
+        />
       </div>
 
-      {/* Request list */}
+      {/* ── Main split layout ── */}
       {loading ? (
-        <div className="bg-white rounded-xl border border-gray-100 flex items-center justify-center py-16 text-gray-400 gap-2">
-          <Loader2 className="h-5 w-5 animate-spin" /> Loading quote requests…
+        <div className="bg-white rounded-2xl border border-gray-100 flex items-center justify-center py-24 text-gray-400 gap-2 shadow-sm">
+          <Loader2 className="h-5 w-5 animate-spin text-[#8B0000]" />
+          <span className="text-sm">Loading quote requests from database…</span>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 flex flex-col items-center justify-center py-16 text-gray-400">
-          <ClipboardList className="h-10 w-10 opacity-25 mb-3" />
-          <p className="text-sm font-medium">No quote requests found</p>
-          <p className="text-xs mt-1 text-gray-400">Submitted requests from the website will appear here automatically.</p>
+        <div className="bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center py-24 text-gray-400 shadow-sm">
+          <ClipboardList className="h-12 w-12 opacity-20 mb-4" />
+          <p className="text-sm font-semibold text-gray-500">No requests found</p>
+          <p className="text-xs mt-1">
+            {search || filterStatus ? "Try clearing filters." : "Quote requests submitted on the website will appear here."}
+          </p>
+          {(search || filterStatus) && (
+            <button
+              onClick={() => { setSearch(""); setFilterStatus(""); }}
+              className="mt-3 text-xs text-[#8B0000] hover:underline font-medium"
+            >
+              Clear all filters
+            </button>
+          )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map(q => {
-            const isExpanded = expanded.has(q.id);
-            const noteText = notes[q.id] !== undefined ? notes[q.id] : (q.adminNotes ?? "");
-            const isUpdating = updatingStatus.has(q.id);
-            const isSavingNote = savingNotes.has(q.id);
-            const isSavingPrc = savingPricing.has(q.id);
+        <div className="flex gap-4 h-[calc(100vh-22rem)] min-h-[500px]">
 
-            return (
-              <div key={q.id} className={`bg-white rounded-xl border transition-shadow ${isExpanded ? "shadow-md border-gray-200" : "shadow-sm border-gray-100"}`}>
+          {/* ── Left: request list ── */}
+          <div className="w-80 shrink-0 flex flex-col gap-2 overflow-y-auto pr-1">
+            {filtered.map(q => (
+              <button
+                key={q.id}
+                onClick={() => setSelectedId(q.id === selectedId ? null : q.id)}
+                className={`w-full text-left rounded-xl border p-3.5 transition-all hover:shadow-md ${
+                  selectedId === q.id
+                    ? "border-[#8B0000] bg-[#8B0000]/5 shadow-md ring-1 ring-[#8B0000]/20"
+                    : "border-gray-100 bg-white shadow-sm hover:border-gray-200"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <span className="font-mono text-[11px] font-bold text-[#8B0000] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 leading-tight">
+                    {q.requestNumber}
+                  </span>
+                  <QuoteStatusPill status={q.status} />
+                </div>
+                <p className="font-semibold text-gray-900 text-sm leading-tight">{q.customerName}</p>
+                {q.companyName && <p className="text-xs text-gray-500 mt-0.5">{q.companyName}</p>}
+                <p className="text-xs text-gray-400 mt-0.5 truncate">{q.customerEmail}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[11px] text-gray-400">{q.items.length} item{q.items.length !== 1 ? "s" : ""}</span>
+                  {q.totalAmount && (
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                      {q.currency ?? "USD"} {q.totalAmount}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-gray-400">{fmtDate(q.createdAt)}</span>
+                </div>
+              </button>
+            ))}
+          </div>
 
-                {/* Card header — click to expand */}
-                <button
-                  onClick={() => toggleExpand(q.id)}
-                  className="w-full flex items-start gap-4 p-4 text-left hover:bg-gray-50/50 rounded-t-xl transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-mono text-xs font-bold text-[#8B0000] bg-red-50 px-2 py-0.5 rounded border border-red-100">
-                        {q.requestNumber}
-                      </span>
-                      <StatusBadge status={q.status} />
-                      <span className="text-xs text-gray-400">{fmtDate(q.createdAt)}</span>
-                      {q.totalAmount && (
-                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          {q.currency ?? "USD"} {q.totalAmount}
+          {/* ── Right: detail panel ── */}
+          <div className="flex-1 overflow-y-auto">
+            {!selectedQuote ? (
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <ClipboardList className="h-10 w-10 opacity-20 mb-3" />
+                <p className="text-sm font-medium text-gray-500">Select a request to view details</p>
+                <p className="text-xs mt-1">Click any request on the left to manage it</p>
+              </div>
+            ) : (() => {
+              const q = selectedQuote;
+              const noteText = notes[q.id] !== undefined ? notes[q.id] : (q.adminNotes ?? "");
+              const isUpdating = updatingStatus.has(q.id);
+              const isSavingNote = savingNotes.has(q.id);
+              const isSavingPrc = savingPricing.has(q.id);
+
+              return (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+
+                  {/* ── Detail Header ── */}
+                  <div className="flex items-start justify-between gap-4 pb-4 border-b border-gray-100">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-sm font-bold text-[#8B0000] bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                          {q.requestNumber}
                         </span>
-                      )}
+                        <QuoteStatusPill status={q.status} />
+                        {q.totalAmount && (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                            {q.currency ?? "USD"} {q.totalAmount}
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="text-lg font-bold text-gray-900">{q.customerName}</h2>
+                      <p className="text-sm text-gray-500">{fmtDate(q.createdAt)}</p>
                     </div>
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <span className="font-semibold text-gray-900">{q.customerName}</span>
-                      {q.companyName && <span className="text-gray-500">{q.companyName}</span>}
-                      <span className="text-gray-400 text-xs">{q.customerEmail}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{q.items.length} product{q.items.length !== 1 ? "s" : ""} requested</p>
+                    <button onClick={() => setSelectedId(null)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div className="shrink-0 text-gray-400 mt-0.5">
-                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </div>
-                </button>
 
-                {/* Expanded detail view */}
-                {isExpanded && (
-                  <div className="px-4 pb-5 pt-0 border-t border-gray-100 space-y-5">
-
-                    {/* ── Customer Info ── */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4">
-                      <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1">Email</p>
-                        <a href={`mailto:${q.customerEmail}`} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-                          <Mail className="h-3.5 w-3.5 shrink-0" /> {q.customerEmail}
+                  {/* ── Customer Info ── */}
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Customer Information</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Email</p>
+                        <a href={`mailto:${q.customerEmail}`} className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium break-all">
+                          <Mail className="h-3 w-3 shrink-0" /> {q.customerEmail}
                         </a>
                       </div>
                       {q.customerPhone && (
-                        <div>
-                          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1">Phone</p>
-                          <a href={`tel:${q.customerPhone}`} className="text-sm text-gray-700 flex items-center gap-1 hover:text-blue-600">
-                            <Phone className="h-3.5 w-3.5 shrink-0" /> {q.customerPhone}
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Phone</p>
+                          <a href={`tel:${q.customerPhone}`} className="text-xs text-gray-700 hover:text-blue-600 flex items-center gap-1 font-medium">
+                            <Phone className="h-3 w-3 shrink-0" /> {q.customerPhone}
                           </a>
                         </div>
                       )}
                       {q.companyName && (
-                        <div>
-                          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1">Company</p>
-                          <p className="text-sm text-gray-700 flex items-center gap-1">
-                            <Building2 className="h-3.5 w-3.5 text-gray-400 shrink-0" /> {q.companyName}
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Company</p>
+                          <p className="text-xs text-gray-700 flex items-center gap-1 font-medium">
+                            <Building2 className="h-3 w-3 text-gray-400 shrink-0" /> {q.companyName}
                           </p>
                         </div>
                       )}
                       {q.deliveryCity && (
-                        <div>
-                          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1">Delivery City</p>
-                          <p className="text-sm text-gray-700">{q.deliveryCity}</p>
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Delivery City</p>
+                          <p className="text-xs text-gray-700 font-medium">{q.deliveryCity}</p>
                         </div>
                       )}
                     </div>
+                  </div>
 
-                    {/* ── Requested Products + Unit Pricing ── */}
+                  {/* ── Products table ── */}
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Requested Products & Unit Pricing</p>
+                    <div className="rounded-xl border border-gray-200 overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold">
+                            <th className="px-4 py-2.5 text-left">Product</th>
+                            <th className="px-4 py-2.5 text-left">SKU</th>
+                            <th className="px-4 py-2.5 text-center">Qty</th>
+                            <th className="px-4 py-2.5 text-right">Unit Price</th>
+                            <th className="px-4 py-2.5 text-right">Subtotal</th>
+                            <th className="px-4 py-2.5 w-16"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {q.items.map(item => {
+                            const priceVal = itemPrices[item.id] !== undefined ? itemPrices[item.id] : (item.unitPrice ?? "");
+                            const num = parseFloat(priceVal);
+                            const subtotal = !isNaN(num) && num > 0 ? (num * item.quantity).toFixed(2) : null;
+                            const isSavingItem = savingItemPrice.has(item.id);
+                            return (
+                              <tr key={item.id} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-3 font-medium text-gray-900">{item.productName}</td>
+                                <td className="px-4 py-3 text-gray-400 font-mono">{item.productSku ?? "—"}</td>
+                                <td className="px-4 py-3 text-center font-bold text-gray-900">{item.quantity}</td>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={priceVal}
+                                    onChange={e => setItemPrices(p => ({ ...p, [item.id]: e.target.value }))}
+                                    className="w-24 text-right px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#8B0000]/30 focus:border-[#8B0000] bg-white float-right"
+                                  />
+                                </td>
+                                <td className="px-4 py-3 text-right font-semibold text-gray-700">
+                                  {subtotal ?? "—"}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <button
+                                    onClick={() => saveItemPrice(item.id)}
+                                    disabled={isSavingItem}
+                                    className="h-7 px-2.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-[#8B0000] hover:text-white transition-colors disabled:opacity-50 font-semibold text-[10px]"
+                                  >
+                                    {isSavingItem ? <Loader2 className="h-2.5 w-2.5 animate-spin inline" /> : "Save"}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* ── Customer message ── */}
+                  {q.message && (
                     <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Requested Products & Pricing</p>
-                      <div className="rounded-xl border border-gray-100 overflow-hidden">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100">
-                              <th className="px-3 py-2 text-left font-semibold text-gray-500">Product</th>
-                              <th className="px-3 py-2 text-left font-semibold text-gray-500">SKU</th>
-                              <th className="px-3 py-2 text-center font-semibold text-gray-500">Qty</th>
-                              <th className="px-3 py-2 text-right font-semibold text-gray-500">Unit Price</th>
-                              <th className="px-3 py-2 text-right font-semibold text-gray-500">Subtotal</th>
-                              <th className="px-3 py-2"></th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-50">
-                            {q.items.map(item => {
-                              const priceVal = itemPrices[item.id] !== undefined ? itemPrices[item.id] : (item.unitPrice ?? "");
-                              const num = parseFloat(priceVal);
-                              const subtotal = !isNaN(num) && num > 0 ? (num * item.quantity).toFixed(2) : null;
-                              const isSavingItem = savingItemPrice.has(item.id);
-                              return (
-                                <tr key={item.id} className="hover:bg-gray-50/50">
-                                  <td className="px-3 py-2.5 font-medium text-gray-900">{item.productName}</td>
-                                  <td className="px-3 py-2.5 text-gray-400 font-mono">{item.productSku ?? "—"}</td>
-                                  <td className="px-3 py-2.5 text-center font-bold text-gray-900">{item.quantity}</td>
-                                  <td className="px-3 py-2.5 text-right">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      value={priceVal}
-                                      onChange={e => setItemPrices(p => ({ ...p, [item.id]: e.target.value }))}
-                                      className="w-24 text-right px-2 py-1 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#8B0000]/30 focus:border-[#8B0000]"
-                                    />
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right font-semibold text-gray-700">
-                                    {subtotal ? subtotal : "—"}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right">
-                                    <button
-                                      onClick={() => saveItemPrice(item.id, q.id)}
-                                      disabled={isSavingItem}
-                                      className="text-[10px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-[#8B0000] hover:text-white transition-colors disabled:opacity-50 font-semibold"
-                                    >
-                                      {isSavingItem ? <Loader2 className="h-2.5 w-2.5 animate-spin inline" /> : "Save"}
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Customer Note</p>
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-800 italic">
+                        "{q.message}"
                       </div>
                     </div>
+                  )}
 
-                    {/* ── Customer Message ── */}
-                    {q.message && (
-                      <div>
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Customer Message</p>
-                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-sm text-gray-700 italic">
-                          "{q.message}"
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── Status Update ── */}
-                    <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Status</p>
-                      <div className="flex flex-wrap gap-2">
-                        {QUOTE_STATUSES.map(s => (
+                  {/* ── Status update ── */}
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Update Status</p>
+                    <div className="flex flex-wrap gap-2">
+                      {QUOTE_STATUSES.map(s => {
+                        const cfg = STATUS_CONFIG[s];
+                        return (
                           <button
                             key={s}
                             disabled={q.status === s || isUpdating}
                             onClick={() => updateStatus(q.id, s)}
-                            className={`text-xs px-3 py-1.5 rounded-full border font-semibold transition-colors capitalize ${
+                            className={`inline-flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full border font-semibold transition-all ${
                               q.status === s
-                                ? "bg-[#8B0000] text-white border-[#8B0000] cursor-default"
-                                : "border-gray-200 text-gray-500 hover:border-[#8B0000]/40 hover:text-[#8B0000] disabled:opacity-40"
+                                ? "bg-[#8B0000] text-white border-[#8B0000] shadow-sm cursor-default"
+                                : "border-gray-200 text-gray-500 bg-white hover:border-[#8B0000]/50 hover:text-[#8B0000] hover:bg-[#8B0000]/5 disabled:opacity-40"
                             }`}
                           >
-                            {isUpdating && q.status !== s ? <Loader2 className="h-3 w-3 animate-spin inline" /> : s}
+                            {isUpdating && q.status !== s
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : <span className={`h-1.5 w-1.5 rounded-full ${q.status === s ? "bg-white" : cfg.dot}`} />
+                            }
+                            {cfg.label}
                           </button>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
+                  </div>
 
-                    {/* ── Pricing Response ── */}
-                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-4 space-y-3">
-                      <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Quote Pricing & Response to Customer</p>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-2">
-                          <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-1">Total Quote Amount</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="e.g. 1250.00"
-                            value={getPricingField(q, "totalAmount")}
-                            onChange={e => setPricingField(q.id, "totalAmount", e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-1">Currency</label>
-                          <select
-                            value={getPricingField(q, "currency")}
-                            onChange={e => setPricingField(q.id, "currency", e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 bg-white"
-                          >
-                            <option>USD</option>
-                            <option>EUR</option>
-                            <option>CDF</option>
-                            <option>ZAR</option>
-                            <option>GBP</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-1">Response Message to Customer</label>
-                        <textarea
-                          rows={3}
-                          placeholder="e.g. Dear Client, please find attached our quotation. Delivery within 5 business days. Contact us for bulk discounts."
-                          value={getPricingField(q, "responseMessage")}
-                          onChange={e => setPricingField(q.id, "responseMessage", e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 resize-none"
+                  {/* ── Pricing & response ── */}
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-5 space-y-4">
+                    <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">Quote Pricing & Response to Customer</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-1.5">Total Amount</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="e.g. 1250.00"
+                          value={getPricingField(q, "totalAmount")}
+                          onChange={e => setPricingField(q.id, "totalAmount", e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 bg-white"
                         />
                       </div>
-                      <button
-                        onClick={() => savePricing(q.id, q)}
-                        disabled={isSavingPrc}
-                        className="flex items-center gap-1.5 h-9 px-5 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-colors disabled:opacity-60"
-                      >
-                        {isSavingPrc ? <><Loader2 className="h-3 w-3 animate-spin" /> Saving…</> : <><Save className="h-3 w-3" /> Save Pricing & Response</>}
-                      </button>
+                      <div>
+                        <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-1.5">Currency</label>
+                        <select
+                          value={getPricingField(q, "currency")}
+                          onChange={e => setPricingField(q.id, "currency", e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 bg-white"
+                        >
+                          <option>USD</option>
+                          <option>EUR</option>
+                          <option>CDF</option>
+                          <option>ZAR</option>
+                          <option>GBP</option>
+                        </select>
+                      </div>
                     </div>
-
-                    {/* ── Internal Notes ── */}
                     <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Internal Notes (Admin Only)</p>
+                      <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-1.5">Response Message to Customer</label>
                       <textarea
-                        value={noteText}
-                        onChange={e => setNotes(n => ({ ...n, [q.id]: e.target.value }))}
                         rows={3}
-                        placeholder="Private notes: follow-up reminders, supplier contacts, stock checks…"
-                        className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000] resize-none"
+                        placeholder="e.g. Dear Client, please find our quotation below. Delivery within 5 business days."
+                        value={getPricingField(q, "responseMessage")}
+                        onChange={e => setPricingField(q.id, "responseMessage", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 resize-none bg-white"
                       />
-                      <button
-                        onClick={() => saveNotes(q.id, q)}
-                        disabled={isSavingNote}
-                        className="mt-2 flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[#8B0000] text-white text-xs font-semibold hover:bg-[#7a0000] transition-colors disabled:opacity-60"
-                      >
-                        {isSavingNote ? <><Loader2 className="h-3 w-3 animate-spin" /> Saving…</> : <><Save className="h-3 w-3" /> Save Notes</>}
-                      </button>
                     </div>
-
+                    <button
+                      onClick={() => savePricing(q.id, q)}
+                      disabled={isSavingPrc}
+                      className="flex items-center gap-2 h-9 px-5 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-colors disabled:opacity-60 shadow-sm"
+                    >
+                      {isSavingPrc ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</> : <><CheckCircle className="h-3.5 w-3.5" /> Save Pricing & Response</>}
+                    </button>
                   </div>
-                )}
-              </div>
-            );
-          })}
+
+                  {/* ── Internal notes ── */}
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Internal Notes (Admin Only)</p>
+                    <textarea
+                      value={noteText}
+                      onChange={e => setNotes(n => ({ ...n, [q.id]: e.target.value }))}
+                      rows={3}
+                      placeholder="Private notes: follow-up reminders, supplier contacts, stock checks…"
+                      className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000] resize-none bg-white"
+                    />
+                    <button
+                      onClick={() => saveNotes(q.id, q)}
+                      disabled={isSavingNote}
+                      className="mt-2 flex items-center gap-2 h-8 px-4 rounded-xl bg-[#8B0000] text-white text-xs font-semibold hover:bg-[#7a0000] transition-colors disabled:opacity-60"
+                    >
+                      {isSavingNote ? <><Loader2 className="h-3 w-3 animate-spin" /> Saving…</> : <><Save className="h-3 w-3" /> Save Notes</>}
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })()}
+          </div>
         </div>
       )}
     </div>

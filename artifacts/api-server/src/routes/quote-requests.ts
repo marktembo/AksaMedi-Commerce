@@ -122,6 +122,9 @@ quoteRequestsRouter.get("/my", requireAuth, async (req, res) => {
 
 // ── GET /admin — All quote requests for admin ──────────────────────────────
 quoteRequestsRouter.get("/admin", requireAdmin, async (_req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   try {
     const requests = await db
       .select()
