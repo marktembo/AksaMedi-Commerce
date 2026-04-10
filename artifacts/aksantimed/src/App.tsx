@@ -34,8 +34,8 @@ const AdminDashboardPage  = lazy(() => import("./pages/AdminDashboardPage"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      staleTime: 60 * 1000,
       gcTime: 10 * 60 * 1000,
       retry: 1,
     },

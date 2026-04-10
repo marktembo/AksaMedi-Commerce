@@ -13,7 +13,7 @@ router.get("/categories", async (_req, res): Promise<void> => {
       imageUrl: categoriesTable.imageUrl,
       slug: categoriesTable.slug,
       productCount: sql<number>`(
-        SELECT COUNT(*)::int FROM products p WHERE p.category_id = ${categoriesTable.id}
+        SELECT COUNT(*)::int FROM products p WHERE p.category_id = ${categoriesTable.id} AND p.published = true
       )`,
     })
     .from(categoriesTable)

@@ -57,6 +57,7 @@ export default function ProductDetail() {
 
   const inCart = isInCart(product.id);
   const handleAddToCart = () => {
+    if (!product.inStock) return;
     addItem(product);
     toast({ title: inCart ? "Quantity updated" : "Added to quote cart", description: product.name });
   };
@@ -177,18 +178,27 @@ export default function ProductDetail() {
             {/* Add to Quote Cart Area */}
             <div className="bg-muted/30 p-6 rounded-xl border border-border mt-auto space-y-3">
               <p className="text-sm text-muted-foreground">
-                Add to your quote cart, then submit a single request for all selected products.
+                {product.inStock
+                  ? "Add to your quote cart, then submit a single request for all selected products."
+                  : "This product is currently out of stock. Contact us to enquire about availability or expected restock date."}
               </p>
               <button
                 onClick={handleAddToCart}
+                disabled={!product.inStock}
                 className={`flex items-center justify-center gap-2 w-full h-12 rounded-full font-bold text-base shadow-md transition-all ${
-                  inCart
+                  !product.inStock
+                    ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none"
+                    : inCart
                     ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20"
                     : "bg-primary text-white hover:bg-primary/90"
                 }`}
               >
-                {inCart ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
-                {inCart ? "Added to Quote Cart" : "Add to Quote Cart"}
+                {!product.inStock
+                  ? <><ShoppingCart className="h-5 w-5" /> Currently Out of Stock</>
+                  : inCart
+                  ? <><Check className="h-5 w-5" /> Added to Quote Cart</>
+                  : <><ShoppingCart className="h-5 w-5" /> Add to Quote Cart</>
+                }
               </button>
               {inCart && (
                 <Link href="/cart" className="flex items-center justify-center gap-1.5 w-full h-10 rounded-full border border-primary text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-colors">

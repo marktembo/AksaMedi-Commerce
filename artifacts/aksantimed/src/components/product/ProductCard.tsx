@@ -36,6 +36,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!product.inStock) return;
     addItem(product);
     toast({
       title: inCart ? "Quantity updated" : "Added to quote cart",
@@ -97,12 +98,20 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Hover overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-center gap-1.5 w-full h-8 rounded-md bg-white text-primary font-semibold text-xs shadow-md">
-            {t("productCard.viewDetails")}
+        {/* Out-of-stock overlay on image */}
+        {!product.inStock && (
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-end justify-center pb-3 z-10">
           </div>
-        </div>
+        )}
+
+        {/* Hover overlay */}
+        {product.inStock && (
+          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent z-20">
+            <div className="flex items-center justify-center gap-1.5 w-full h-8 rounded-md bg-white text-primary font-semibold text-xs shadow-md">
+              {t("productCard.viewDetails")}
+            </div>
+          </div>
+        )}
       </Link>
 
       {/* Card body */}
@@ -140,14 +149,21 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Primary: Add to Quote Cart */}
           <button
             onClick={handleAddToCart}
+            disabled={!product.inStock}
             className={`flex items-center justify-center gap-2 w-full h-9 rounded-full text-xs font-bold transition-all shadow-sm ${
-              inCart
+              !product.inStock
+                ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                : inCart
                 ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20"
                 : "bg-primary text-white hover:bg-primary/90"
             }`}
           >
-            {inCart ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-            {inCart ? t("productCard.addedToInquiry") : t("productCard.requestQuote")}
+            {!product.inStock
+              ? <><ShoppingCart className="w-3.5 h-3.5" />{t("productCard.outOfStock")}</>
+              : inCart
+              ? <><Check className="w-3.5 h-3.5" />{t("productCard.addedToInquiry")}</>
+              : <><ShoppingCart className="w-3.5 h-3.5" />{t("productCard.requestQuote")}</>
+            }
           </button>
 
           {/* View details + Save row */}
