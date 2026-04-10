@@ -15,7 +15,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { isSaved, toggleSave } = useSavedProducts();
-  const { addToInquiry, isInInquiry } = useInquiry();
+  const { addToInquiry, isInInquiry, openInquiry } = useInquiry();
   const [, navigate] = useLocation();
 
   const inInquiry = isInInquiry(product.id);
@@ -144,7 +144,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Add to Inquiry + Save row */}
           <div className="flex gap-2">
             <button
-              onClick={(e) => { e.stopPropagation(); addToInquiry(product); }}
+              onClick={(e) => { e.stopPropagation(); addToInquiry(product); if (!inInquiry) openInquiry(); }}
               className={`flex items-center justify-center gap-1.5 flex-1 h-8 rounded-full text-xs font-semibold border transition-all ${
                 inInquiry
                   ? "bg-primary/10 border-primary/30 text-primary"

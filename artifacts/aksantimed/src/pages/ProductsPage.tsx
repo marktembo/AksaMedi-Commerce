@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useListProducts, useListCategories } from "@workspace/api-client-react";
 import { ProductCard } from "@/components/product/ProductCard";
-import { InquiryDrawer } from "@/components/product/InquiryDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -372,8 +371,6 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
-
-      <InquiryDrawer />
 
     </div>
   );

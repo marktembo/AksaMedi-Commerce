@@ -27,6 +27,15 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - Background: White
 - Accents: Gold/cream tones
 
+## Admin Panel
+
+- Route: `/admin/login` → `/admin`
+- Credentials: username `admin`, password `aksantimed`
+- JWT-based admin auth (separate secret from user JWT)
+- Shows all registered customers in a searchable table
+- Shows all submitted inquiries grouped by submission, with status management (Mark as Responded)
+- No header/footer — fully standalone admin UI
+
 ## Features
 
 - Homepage with hero, featured categories, featured products, trust strip

@@ -9,6 +9,10 @@ const JWT_SECRET = process.env.SESSION_SECRET ?? "aksantimed-fallback-secret-cha
 const JWT_EXPIRES_IN = "7d";
 const SALT_ROUNDS = 12;
 
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "aksantimed";
+const ADMIN_JWT_SECRET = (process.env.SESSION_SECRET ?? "aksantimed-fallback-secret-change-in-production") + "_admin";
+
 export function signToken(userId: number): string {
   return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
@@ -20,6 +24,37 @@ export function verifyToken(token: string): { sub: number } | null {
   } catch {
     return null;
   }
+}
+
+export function verifyAdminCredentials(username: string, password: string): boolean {
+  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+}
+
+export function signAdminToken(): string {
+  return jwt.sign({ role: "admin" }, ADMIN_JWT_SECRET, { expiresIn: "12h" });
+}
+
+export function verifyAdminToken(token: string): boolean {
+  try {
+    const payload = jwt.verify(token, ADMIN_JWT_SECRET) as { role: string };
+    return payload.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Admin authentication required" });
+    return;
+  }
+  const token = authHeader.slice(7);
+  if (!verifyAdminToken(token)) {
+    res.status(401).json({ error: "Invalid or expired admin token" });
+    return;
+  }
+  next();
 }
 
 export async function hashPassword(password: string): Promise<string> {
