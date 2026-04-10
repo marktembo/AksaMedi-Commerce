@@ -31,11 +31,26 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 - Route: `/admin/login` → `/admin`
 - Credentials: username `admin`, password `aksantimed`
-- JWT-based admin auth (separate secret from user JWT)
-- **Quote Requests tab** — Shows all quote submissions with product line items, customer details, status management (new → pending → contacted → closed)
-- Customers tab — searchable registered customer list
-- Inquiries tab — legacy inquiry history
+- JWT-based admin auth (stored in `aksantimed_admin_token` cookie/localStorage)
+- **Sidebar layout** — 5 sections: Overview, Products, Add Product, Inventory, Requests
+- **Overview** — Stats cards (total/published products, low stock, new requests, customers) + recent requests preview
+- **Products** — Full CRUD table; search/filter by category/published/stock; edit, delete, toggle published/featured/inStock per row
+- **Add/Edit Product** — Full form: name, description, category, brand, SKU, pricing, stock qty, image upload (base64 to `/api/admin/upload`), toggles for published/inStock/featured/Rx
+- **Inventory** — Quick stock table; inline quantity editing, per-row save, in-stock toggle
+- **Requests** — Quote requests list with status filter, expandable cards showing line items + customer info + admin notes; status update (new→pending→contacted→closed); internal notes with save
 - No header/footer — fully standalone admin UI
+
+### Admin API Routes (all require `Authorization: Bearer <jwt>`)
+- `GET /api/admin/products` — list all products with category names
+- `POST /api/admin/products` — create product
+- `PUT /api/admin/products/:id` — update product
+- `DELETE /api/admin/products/:id` — delete product
+- `PATCH /api/admin/products/:id/toggle` — toggle inStock/featured/published
+- `PATCH /api/admin/products/:id/stock` — update stock qty/inStock
+- `POST /api/admin/upload` — upload product image (base64 data URL → `/products/*.ext`)
+- `GET /api/quote-requests/admin` — list all quote requests with items
+- `PATCH /api/quote-requests/admin/:id/status` — update status
+- `PATCH /api/quote-requests/admin/:id/notes` — update internal admin notes
 
 ## Quote Cart Flow (Core Business Model)
 

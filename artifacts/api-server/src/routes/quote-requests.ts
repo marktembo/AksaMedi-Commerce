@@ -107,6 +107,29 @@ quoteRequestsRouter.get("/admin", requireAdmin, async (_req, res) => {
   }
 });
 
+quoteRequestsRouter.patch("/admin/:id/notes", requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { adminNotes } = req.body as { adminNotes?: string };
+
+  if (typeof adminNotes !== "string") {
+    return res.status(400).json({ error: "adminNotes must be a string" });
+  }
+
+  try {
+    const [updated] = await db
+      .update(quoteRequestsTable)
+      .set({ adminNotes: adminNotes || null })
+      .where(eq(quoteRequestsTable.id, id))
+      .returning();
+
+    if (!updated) return res.status(404).json({ error: "Quote request not found" });
+    return res.json(updated);
+  } catch (err) {
+    logger.error({ err }, "Failed to update admin notes");
+    return res.status(500).json({ error: "Failed to update notes" });
+  }
+});
+
 quoteRequestsRouter.patch("/admin/:id/status", requireAdmin, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { status } = req.body;

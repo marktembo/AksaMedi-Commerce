@@ -19,7 +19,7 @@ router.get("/products", async (req, res): Promise<void> => {
   const { categoryId, search, page, limit, featured } = query.data;
   const offset = ((page ?? 1) - 1) * (limit ?? 20);
 
-  const conditions = [];
+  const conditions = [eq(productsTable.published, true)];
   if (categoryId != null) {
     conditions.push(eq(productsTable.categoryId, categoryId));
   }

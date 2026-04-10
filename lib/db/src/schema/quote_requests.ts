@@ -12,6 +12,7 @@ export const quoteRequestsTable = pgTable("quote_requests", {
   deliveryCity: text("delivery_city"),
   message: text("message"),
   status: text("status").notNull().default("new"),
+  adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

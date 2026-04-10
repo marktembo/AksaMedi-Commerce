@@ -13,6 +13,7 @@ export const productsTable = pgTable("products", {
   inStock: boolean("in_stock").notNull().default(true),
   stockQuantity: integer("stock_quantity").notNull().default(0),
   featured: boolean("featured").notNull().default(false),
+  published: boolean("published").notNull().default(true),
   prescriptionRequired: boolean("prescription_required").notNull().default(false),
   manufacturer: text("manufacturer"),
   sku: text("sku"),
