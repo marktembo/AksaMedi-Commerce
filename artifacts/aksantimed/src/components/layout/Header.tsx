@@ -127,10 +127,10 @@ export function Header() {
         <div className="flex h-16 items-center gap-6">
 
           {/* Logo + Nav group — left side */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-10">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 transition-opacity hover:opacity-90" onClick={closeAll}>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 pl-2 transition-opacity hover:opacity-90" onClick={closeAll}>
             <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-10 w-10 rounded-lg object-contain" />
             <span className="font-bold text-[#8B0000] text-lg tracking-tight leading-none font-serif hidden sm:block">
               Aksantimed
