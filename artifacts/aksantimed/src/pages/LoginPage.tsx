@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { apiLogin } from "@/lib/auth-api";
 import { useTranslation } from "react-i18next";
 
@@ -20,11 +21,20 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const [, navigate] = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { isAdminAuthenticated } = useAdminAuth();
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (isAdminAuthenticated) { navigate("/admin"); return; }
+    if (isAuthenticated) {
+      navigate(user?.role === "admin" ? "/admin" : "/account");
+    }
+  }, [authLoading, isAuthenticated, isAdminAuthenticated, user, navigate]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -34,9 +44,9 @@ export default function LoginPage() {
     setServerError("");
     setIsLoading(true);
     try {
-      const { token, user } = await apiLogin(data.email, data.password);
-      login(token, user);
-      navigate("/account");
+      const { token, user: loggedInUser } = await apiLogin(data.email, data.password);
+      login(token, loggedInUser);
+      navigate(loggedInUser.role === "admin" ? "/admin" : "/account");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Login failed");
     } finally {

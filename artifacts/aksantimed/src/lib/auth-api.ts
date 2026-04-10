@@ -7,6 +7,7 @@ export interface AuthUser {
   phone: string | null;
   companyName: string;
   jobTitle: string | null;
+  role: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

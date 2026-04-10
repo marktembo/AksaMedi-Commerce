@@ -7,14 +7,19 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ component: Component }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isLoading) return;
+    if (!isAuthenticated) {
       navigate("/login");
+      return;
     }
-  }, [isLoading, isAuthenticated, navigate]);
+    if (user?.role === "admin") {
+      navigate("/admin");
+    }
+  }, [isLoading, isAuthenticated, user, navigate]);
 
   if (isLoading) {
     return (
@@ -27,7 +32,7 @@ export function ProtectedRoute({ component: Component }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || user?.role === "admin") {
     return null;
   }
 

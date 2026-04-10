@@ -13,13 +13,13 @@ const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "aksantimed";
 const ADMIN_JWT_SECRET = (process.env.SESSION_SECRET ?? "aksantimed-fallback-secret-change-in-production") + "_admin";
 
-export function signToken(userId: number): string {
-  return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+export function signToken(userId: number, role: string = "customer"): string {
+  return jwt.sign({ sub: userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-export function verifyToken(token: string): { sub: number } | null {
+export function verifyToken(token: string): { sub: number; role: string } | null {
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { sub: number };
+    const payload = jwt.verify(token, JWT_SECRET) as { sub: number; role: string };
     return payload;
   } catch {
     return null;
@@ -50,11 +50,19 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     return;
   }
   const token = authHeader.slice(7);
-  if (!verifyAdminToken(token)) {
-    res.status(401).json({ error: "Invalid or expired admin token" });
+
+  if (verifyAdminToken(token)) {
+    next();
     return;
   }
-  next();
+
+  const userPayload = verifyToken(token);
+  if (userPayload && userPayload.role === "admin") {
+    next();
+    return;
+  }
+
+  res.status(401).json({ error: "Invalid or expired admin token" });
 }
 
 export async function hashPassword(password: string): Promise<string> {

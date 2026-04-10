@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { SavedProductsProvider } from "./contexts/SavedProductsContext";
 import { QuoteCartProvider } from "./contexts/QuoteCartContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
+import { useAuth } from "./contexts/AuthContext";
 import { ScrollToTopButton } from "./components/ScrollToTopButton";
 
 const HomePage            = lazy(() => import("./pages/HomePage"));
@@ -52,17 +53,38 @@ function PageSpinner() {
 
 function AdminRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAdminAuthenticated } = useAdminAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [, navigate] = useLocation();
-  if (!isAdminAuthenticated) {
-    navigate("/admin/login");
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="h-9 w-9 rounded-full border-2 border-[#8B0000] border-t-transparent animate-spin" /></div>;
+  }
+
+  const isUserAdmin = isAuthenticated && user?.role === "admin";
+
+  if (!isAdminAuthenticated && !isUserAdmin) {
+    if (isAuthenticated && user?.role === "customer") {
+      navigate("/account");
+    } else {
+      navigate("/admin/login");
+    }
     return null;
   }
+
   return <Component />;
 }
 
 function Router() {
   const [location] = useLocation();
+  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAdminAuthenticated } = useAdminAuth();
+  const [, navigate] = useLocation();
   const isAdminRoute = location.startsWith("/admin");
+
+  if (isAdminRoute && !isLoading && isAuthenticated && user?.role === "customer" && !isAdminAuthenticated) {
+    navigate("/account");
+    return null;
+  }
 
   if (isAdminRoute) {
     return (

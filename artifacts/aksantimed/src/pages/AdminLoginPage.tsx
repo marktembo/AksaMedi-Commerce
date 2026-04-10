@@ -1,16 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
-import { HeartPulse, LogIn, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { HeartPulse, LogIn, Eye, EyeOff, ShieldCheck, AlertTriangle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const API_BASE = "/api";
+const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
+const API_BASE = `${BASE}/api`;
 
 export default function AdminLoginPage() {
-  const { adminLogin } = useAdminAuth();
+  const { adminLogin, isAdminAuthenticated } = useAdminAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (isAdminAuthenticated) navigate("/admin");
+  }, [isAdminAuthenticated, navigate]);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -54,6 +62,27 @@ export default function AdminLoginPage() {
             <ShieldCheck className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Admin Access</span>
           </div>
+
+          {!isLoading && isAuthenticated && user?.role === "customer" && (
+            <div className="flex flex-col gap-3 mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-2 text-amber-800">
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                <p className="text-xs leading-relaxed">
+                  You're signed in as a customer account ({user.email}). This page is for admin access only.
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="w-full border-amber-300 text-amber-800 hover:bg-amber-100 gap-1.5 h-8 text-xs"
+                onClick={() => navigate("/account")}
+              >
+                <User className="h-3 w-3" />
+                Go to my account
+              </Button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
