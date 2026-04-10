@@ -1,0 +1,149 @@
+Please fix and improve my quote request system.
+
+Current problem:
+When a customer submits a quote request from the website, the admin does not receive it properly inside the admin dashboard.
+
+I want every submitted quote request to be saved and shown inside the admin dashboard so the admin can review it, manage it, and prepare pricing for the customer.
+
+Please implement the following:
+
+1. Save quote requests properly
+When a customer submits a quote request or inquiry from the website:
+- Save the quote request to the database or storage layer
+- Make sure it does not only rely on email
+- Ensure each quote request is stored with full details so it can appear in the admin dashboard
+
+2. Add quote requests to the admin dashboard
+Create a dedicated section in the admin dashboard called:
+- Quote Requests
+or
+- Customer Quotes
+
+In this section, the admin should be able to see all quote requests submitted from the website.
+
+3. Store the following quote request fields
+Each quote request should include:
+- Customer full name
+- Email address
+- Phone number
+- Company / Clinic / Hospital name
+- Message or notes from customer
+- Requested products
+- Quantity per product if available
+- Date submitted
+- Request status
+- Internal admin notes
+- Quote price / pricing response field
+- Reference number or quote ID if possible
+
+4. Show quote requests in a table
+Inside the admin dashboard, display quote requests in a clean table or list with:
+- Quote ID
+- Customer name
+- Email
+- Company
+- Number of requested products
+- Date submitted
+- Status
+- Action button to open/view
+
+Add:
+- Search
+- Filter by status
+- Sort by newest first
+
+5. Add quote request detail view
+When the admin opens a quote request, show:
+- Full customer details
+- All requested products
+- Product quantities
+- Customer message
+- Submission date
+- Status
+- Admin notes
+- Pricing section
+
+6. Allow the admin to process the quote
+Inside the quote request detail page, the admin should be able to:
+- Change the status
+- Add internal notes
+- Enter pricing for each product or total quote amount
+- Add a response message for the customer
+- Mark the quote as:
+  - New
+  - Reviewing
+  - Priced
+  - Sent to Customer
+  - Approved
+  - Rejected
+  - Completed
+
+7. Add pricing functionality
+The admin should be able to generate a quote from the dashboard by:
+- Entering a price for each requested product
+or
+- Entering one total quote amount
+- Adding optional comments
+- Saving the quote response
+
+Please structure this cleanly so it can later support PDF quote generation if needed.
+
+8. Connect quote submission from frontend to dashboard
+Make sure the quote request form on the public website is fully connected so that:
+- Once submitted, the request is stored
+- It automatically appears in the admin dashboard
+- The admin can open and process it
+
+9. Add customer confirmation
+After a customer submits a quote request:
+- Show a success message
+- Optionally generate a quote reference number
+- Confirm that their request has been received
+
+10. Optional email support
+If email is already being used, keep it as a secondary notification only.
+But the main source of truth must be:
+- saved quote requests in the admin dashboard
+
+11. Dashboard navigation
+Add the new admin menu item:
+- Quote Requests
+
+12. UI requirements
+Make the Quote Requests section:
+- Clean
+- Professional
+- Easy to use
+- Consistent with the current admin dashboard
+
+Use:
+- Status badges
+- Search bar
+- Filter dropdown
+- Detail page or slide-out panel
+- Save/update actions
+
+13. Code and data structure
+Please create or improve:
+- quote request model / schema
+- frontend quote submission logic
+- backend API endpoint for quote submission
+- admin quote requests list page
+- admin quote request detail page
+- quote status update logic
+- pricing fields in the data model
+
+14. Important
+- Do not break the current quote submission flow
+- Use the existing stack and project structure
+- Build on top of the current admin dashboard
+- Make sure quote requests persist and can be managed later
+- Make sure the admin dashboard reads real submitted requests, not mock data
+
+15. Explain after implementation
+After making the changes, explain clearly:
+1. What was fixed
+2. How quote requests are now stored
+3. Which files were changed
+4. How the admin can view and process quote requests
+5. What still needs manual setup, such as database migration, email setup, or permissions

@@ -7,6 +7,8 @@ import { requireAdmin, requireAuth, verifyToken } from "../lib/auth";
 
 export const quoteRequestsRouter = Router();
 
+const VALID_STATUSES = ["new", "reviewing", "priced", "sent", "approved", "rejected", "completed"] as const;
+
 const quoteItemSchema = z.object({
   productId: z.number().int().positive(),
   productName: z.string().min(1),
@@ -33,6 +35,7 @@ function generateRequestNumber(): string {
   return `QR-${datePart}-${randPart}`;
 }
 
+// ── POST / — Submit a new quote request ────────────────────────────────────
 quoteRequestsRouter.post("/", async (req, res) => {
   const parsed = createQuoteRequestSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -91,6 +94,7 @@ quoteRequestsRouter.post("/", async (req, res) => {
   }
 });
 
+// ── GET /my — Customer's own quote requests ────────────────────────────────
 quoteRequestsRouter.get("/my", requireAuth, async (req, res) => {
   try {
     const requests = await db
@@ -116,6 +120,7 @@ quoteRequestsRouter.get("/my", requireAuth, async (req, res) => {
   }
 });
 
+// ── GET /admin — All quote requests for admin ──────────────────────────────
 quoteRequestsRouter.get("/admin", requireAdmin, async (_req, res) => {
   try {
     const requests = await db
@@ -140,6 +145,31 @@ quoteRequestsRouter.get("/admin", requireAdmin, async (_req, res) => {
   }
 });
 
+// ── PATCH /admin/:id/status ────────────────────────────────────────────────
+quoteRequestsRouter.patch("/admin/:id/status", requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { status } = req.body;
+
+  if (!VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ error: "Invalid status value", valid: VALID_STATUSES });
+  }
+
+  try {
+    const [updated] = await db
+      .update(quoteRequestsTable)
+      .set({ status })
+      .where(eq(quoteRequestsTable.id, id))
+      .returning();
+
+    if (!updated) return res.status(404).json({ error: "Quote request not found" });
+    return res.json(updated);
+  } catch (err) {
+    logger.error({ err }, "Failed to update quote request status");
+    return res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
+// ── PATCH /admin/:id/notes ─────────────────────────────────────────────────
 quoteRequestsRouter.patch("/admin/:id/notes", requireAdmin, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { adminNotes } = req.body as { adminNotes?: string };
@@ -163,26 +193,50 @@ quoteRequestsRouter.patch("/admin/:id/notes", requireAdmin, async (req, res) => 
   }
 });
 
-quoteRequestsRouter.patch("/admin/:id/status", requireAdmin, async (req, res) => {
+// ── PATCH /admin/:id/pricing — Save pricing + response to customer ─────────
+quoteRequestsRouter.patch("/admin/:id/pricing", requireAdmin, async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { status } = req.body;
-
-  const validStatuses = ["new", "pending", "contacted", "closed"];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: "Invalid status value" });
-  }
+  const { totalAmount, currency, responseMessage } = req.body as {
+    totalAmount?: string;
+    currency?: string;
+    responseMessage?: string;
+  };
 
   try {
     const [updated] = await db
       .update(quoteRequestsTable)
-      .set({ status })
+      .set({
+        totalAmount: totalAmount ?? null,
+        currency: currency ?? "USD",
+        responseMessage: responseMessage ?? null,
+      })
       .where(eq(quoteRequestsTable.id, id))
       .returning();
 
     if (!updated) return res.status(404).json({ error: "Quote request not found" });
     return res.json(updated);
   } catch (err) {
-    logger.error({ err }, "Failed to update quote request status");
-    return res.status(500).json({ error: "Failed to update status" });
+    logger.error({ err }, "Failed to update pricing");
+    return res.status(500).json({ error: "Failed to update pricing" });
+  }
+});
+
+// ── PATCH /admin/items/:itemId/price — Set unit price for an item ──────────
+quoteRequestsRouter.patch("/admin/items/:itemId/price", requireAdmin, async (req, res) => {
+  const itemId = parseInt(req.params.itemId, 10);
+  const { unitPrice } = req.body as { unitPrice?: string };
+
+  try {
+    const [updated] = await db
+      .update(quoteRequestItemsTable)
+      .set({ unitPrice: unitPrice ?? null })
+      .where(eq(quoteRequestItemsTable.id, itemId))
+      .returning();
+
+    if (!updated) return res.status(404).json({ error: "Item not found" });
+    return res.json(updated);
+  } catch (err) {
+    logger.error({ err }, "Failed to update item price");
+    return res.status(500).json({ error: "Failed to update item price" });
   }
 });

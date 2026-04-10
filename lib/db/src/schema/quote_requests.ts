@@ -14,6 +14,9 @@ export const quoteRequestsTable = pgTable("quote_requests", {
   message: text("message"),
   status: text("status").notNull().default("new"),
   adminNotes: text("admin_notes"),
+  responseMessage: text("response_message"),
+  totalAmount: text("total_amount"),
+  currency: text("currency").default("USD"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -25,6 +28,7 @@ export const quoteRequestItemsTable = pgTable("quote_request_items", {
   productSku: text("product_sku"),
   productImageUrl: text("product_image_url"),
   quantity: integer("quantity").notNull().default(1),
+  unitPrice: text("unit_price"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

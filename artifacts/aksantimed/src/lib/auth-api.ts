@@ -155,6 +155,7 @@ export interface QuoteRequestItem {
   productSku: string | null;
   productImageUrl: string | null;
   quantity: number;
+  unitPrice: string | null;
 }
 
 export interface MyQuoteRequest {
@@ -164,6 +165,9 @@ export interface MyQuoteRequest {
   deliveryCity: string | null;
   message: string | null;
   adminNotes: string | null;
+  responseMessage: string | null;
+  totalAmount: string | null;
+  currency: string | null;
   createdAt: string;
   items: QuoteRequestItem[];
 }

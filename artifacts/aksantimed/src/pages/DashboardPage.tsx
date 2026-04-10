@@ -173,15 +173,22 @@ export default function DashboardPage() {
 
   const downloadQuotePDF = (qr: MyQuoteRequest) => {
     const statusLabels: Record<string, string> = {
-      new: "Received", pending: "Under Review", contacted: "Contacted", closed: "Closed",
+      new: "Received", reviewing: "Under Review", priced: "Priced",
+      sent: "Quote Sent", approved: "Approved", rejected: "Rejected", completed: "Completed",
     };
     const statusLabel = statusLabels[qr.status] ?? "Received";
-    const rows = qr.items.map((item, i) => `
+    const rows = qr.items.map((item, i) => {
+      const unitP = item.unitPrice ? parseFloat(item.unitPrice) : null;
+      const subtotal = unitP ? (unitP * item.quantity).toFixed(2) : null;
+      return `
       <tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}">
         <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px">${item.productName}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;color:#666">${item.productSku ?? "—"}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;text-align:center">${item.quantity}</td>
-      </tr>`).join("");
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;text-align:right;color:#555">${item.unitPrice ? item.unitPrice : "—"}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;text-align:right;font-weight:600">${subtotal ?? "—"}</td>
+      </tr>`;
+    }).join("");
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -244,12 +251,16 @@ export default function DashboardPage() {
         <th>Product</th>
         <th>SKU</th>
         <th style="text-align:center">Qty</th>
+        <th style="text-align:right">Unit Price</th>
+        <th style="text-align:right">Subtotal</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
+    ${qr.totalAmount ? `<tfoot><tr style="background:#8B0000;color:#fff"><td colspan="3" style="padding:8px 12px;font-weight:700;font-size:13px">Total Quote Amount</td><td colspan="2" style="padding:8px 12px;font-weight:800;font-size:14px;text-align:right">${qr.currency ?? "USD"} ${qr.totalAmount}</td></tr></tfoot>` : ""}
   </table>
 
-  ${qr.message ? `<div class="section-title">Your Message</div><div class="msg">"${qr.message}"</div>` : ""}
+  ${qr.responseMessage ? `<div class="section-title">Response from Aksantimed</div><div class="msg" style="background:#e8f0fe;border-color:#1a56db;color:#1e40af">"${qr.responseMessage}"</div>` : ""}
+  ${qr.message ? `<div class="section-title">Your Note</div><div class="msg">"${qr.message}"</div>` : ""}
 
   <div class="footer">
     <strong>Aksantimed</strong> · Kinshasa, DRC &amp; South Africa<br/>
@@ -520,10 +531,13 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     {quoteRequests.map((qr) => {
                       const statusConfig: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
-                        new: { label: "Received", icon: <Hourglass className="w-3 h-3" />, cls: "bg-blue-50 text-blue-600" },
-                        pending: { label: "Under Review", icon: <AlertTriangle className="w-3 h-3" />, cls: "bg-amber-50 text-amber-600" },
-                        contacted: { label: "Contacted", icon: <CheckCircle2 className="w-3 h-3" />, cls: "bg-green-50 text-green-600" },
-                        closed: { label: "Closed", icon: <XCircle className="w-3 h-3" />, cls: "bg-gray-100 text-gray-500" },
+                        new:       { label: "Received",    icon: <Hourglass className="w-3 h-3" />,     cls: "bg-amber-50 text-amber-600" },
+                        reviewing: { label: "Under Review", icon: <AlertTriangle className="w-3 h-3" />, cls: "bg-blue-50 text-blue-600" },
+                        priced:    { label: "Priced",       icon: <CheckCircle2 className="w-3 h-3" />,  cls: "bg-violet-50 text-violet-600" },
+                        sent:      { label: "Quote Sent",   icon: <CheckCircle2 className="w-3 h-3" />,  cls: "bg-cyan-50 text-cyan-600" },
+                        approved:  { label: "Approved",     icon: <CheckCircle2 className="w-3 h-3" />,  cls: "bg-green-50 text-green-600" },
+                        rejected:  { label: "Rejected",     icon: <XCircle className="w-3 h-3" />,       cls: "bg-red-50 text-red-500" },
+                        completed: { label: "Completed",    icon: <CheckCircle2 className="w-3 h-3" />,  cls: "bg-gray-100 text-gray-500" },
                       };
                       const st = statusConfig[qr.status] ?? statusConfig.new;
                       return (
@@ -568,24 +582,40 @@ export default function DashboardPage() {
                                   <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
                                   {item.productSku && <p className="text-xs text-gray-400">SKU: {item.productSku}</p>}
                                 </div>
-                                <span className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full font-medium shrink-0">
-                                  Qty: {item.quantity}
-                                </span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {item.unitPrice && (
+                                    <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium border border-emerald-100">
+                                      {item.unitPrice} / unit
+                                    </span>
+                                  )}
+                                  <span className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full font-medium">
+                                    Qty: {item.quantity}
+                                  </span>
+                                </div>
                               </div>
                             ))}
                           </div>
 
-                          {/* Admin notes if any */}
-                          {qr.adminNotes && (
-                            <div className="px-4 py-3 bg-green-50/60 border-t border-green-100">
-                              <p className="text-xs font-medium text-green-700 mb-0.5">Response from Aksantimed</p>
-                              <p className="text-xs text-green-800 leading-relaxed">{qr.adminNotes}</p>
+                          {/* Pricing summary if set */}
+                          {qr.totalAmount && (
+                            <div className="px-4 py-3 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between">
+                              <p className="text-xs font-semibold text-emerald-800">Total Quote Amount</p>
+                              <p className="text-sm font-bold text-emerald-900">{qr.currency ?? "USD"} {qr.totalAmount}</p>
                             </div>
                           )}
 
-                          {/* Message if any */}
+                          {/* Admin response message */}
+                          {qr.responseMessage && (
+                            <div className="px-4 py-3 bg-blue-50/60 border-t border-blue-100">
+                              <p className="text-xs font-medium text-blue-700 mb-0.5">Message from Aksantimed</p>
+                              <p className="text-xs text-blue-800 leading-relaxed">{qr.responseMessage}</p>
+                            </div>
+                          )}
+
+                          {/* Customer's own message */}
                           {qr.message && (
                             <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100">
+                              <p className="text-xs text-gray-400 font-medium mb-0.5">Your note</p>
                               <p className="text-xs text-gray-500 italic">"{qr.message}"</p>
                             </div>
                           )}
