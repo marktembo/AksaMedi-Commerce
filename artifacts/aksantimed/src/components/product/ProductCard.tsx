@@ -1,29 +1,51 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { HeartPulse, Activity, MessageSquare, Plus, Check, Bookmark, BookmarkCheck } from "lucide-react";
-import { Product } from "@workspace/api-client-react";
+import { HeartPulse, Activity, ShoppingCart, Check, Bookmark, BookmarkCheck, Mail } from "lucide-react";
+import { Product, useAddToCart } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSavedProducts } from "@/contexts/SavedProductsContext";
+import { getSessionId } from "@/lib/session";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   product: Product;
-  onAddToInquiry?: (product: Product) => void;
-  inInquiry?: boolean;
 }
 
-export function ProductCard({ product, onAddToInquiry, inInquiry = false }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { isSaved, toggleSave } = useSavedProducts();
   const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const saved = isSaved(product.id);
+  const sessionId = getSessionId();
 
-  const quoteSubject = encodeURIComponent(`Quote Request: ${product.name} (SKU: ${product.sku || product.id})`);
-  const quoteBody = encodeURIComponent(
-    `Hello Aksantimed,\n\nI would like to request a quote for:\n\nProduct: ${product.name}\nSKU: ${product.sku || "N/A"}\nManufacturer: ${product.manufacturer || "N/A"}\n\nQuantity required:\nDelivery location:\n\nThank you.`
-  );
+  const addToCartMutation = useAddToCart({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+        setAddedToCart(true);
+        toast({
+          title: t("productCard.addedToCartTitle"),
+          description: product.name,
+        });
+        setTimeout(() => setAddedToCart(false), 2500);
+      },
+    },
+  });
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (addedToCart || addToCartMutation.isPending) return;
+    addToCartMutation.mutate({ data: { sessionId, productId: product.id, quantity: 1 } });
+  };
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,13 +57,18 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
     toggleSave(product);
   };
 
-  return (
-    <div className={`group flex flex-col bg-card rounded-xl border overflow-hidden transition-all duration-300 hover:shadow-xl ${inInquiry ? "border-primary/40 ring-2 ring-primary/10" : "border-border hover:border-primary/20"}`}>
+  const quoteSubject = encodeURIComponent(`Quote Request: ${product.name} (SKU: ${product.sku || product.id})`);
+  const quoteBody = encodeURIComponent(
+    `Hello Aksantimed,\n\nI would like to request a quote for:\n\nProduct: ${product.name}\nSKU: ${product.sku || "N/A"}\nManufacturer: ${product.manufacturer || "N/A"}\n\nQuantity required:\nDelivery location:\n\nThank you.`
+  );
 
-      {/* Image area — clicking navigates to detail */}
+  return (
+    <div className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+
+      {/* Image area */}
       <Link href={`/products/${product.id}`} className="block relative aspect-square bg-muted/20 p-5 overflow-hidden">
 
-        {/* Left badges: out-of-stock / featured */}
+        {/* Left badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
           {!product.inStock && (
             <Badge variant="destructive" className="font-semibold shadow-sm text-xs">{t("productCard.outOfStock")}</Badge>
@@ -67,10 +94,7 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
                 : "bg-white/90 backdrop-blur-sm border-white/60 text-gray-400 hover:text-primary hover:border-primary/40"
             }`}
           >
-            {saved
-              ? <BookmarkCheck className="w-3.5 h-3.5" />
-              : <Bookmark className="w-3.5 h-3.5" />
-            }
+            {saved ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
           </button>
         </div>
 
@@ -118,7 +142,7 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
           {product.description}
         </p>
 
-        {/* Availability indicator */}
+        {/* Availability */}
         <div className="flex items-center gap-1.5 mb-3">
           <span className={`h-2 w-2 rounded-full shrink-0 ${product.inStock ? "bg-green-500" : "bg-red-400"}`} />
           <span className="text-xs text-muted-foreground">
@@ -129,29 +153,35 @@ export function ProductCard({ product, onAddToInquiry, inInquiry = false }: Prod
 
         {/* Action buttons */}
         <div className="space-y-2 mt-auto">
-          {/* Primary: Request a Quote */}
-          <a
-            href={`mailto:info@aksantimed.com?subject=${quoteSubject}&body=${quoteBody}`}
-            className="flex items-center justify-center gap-2 w-full h-9 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm"
-            onClick={(e) => e.stopPropagation()}
+          {/* Primary: Add to Cart */}
+          <button
+            onClick={handleAddToCart}
+            disabled={!product.inStock || addToCartMutation.isPending}
+            className={`flex items-center justify-center gap-2 w-full h-9 rounded-full text-xs font-bold transition-all shadow-sm ${
+              addedToCart
+                ? "bg-green-600 text-white"
+                : "bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            {t("productCard.requestQuote")}
-          </a>
+            {addedToCart ? (
+              <><Check className="w-3.5 h-3.5" />{t("productCard.addedToCart")}</>
+            ) : addToCartMutation.isPending ? (
+              <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />{t("productCard.addToCart")}</>
+            ) : (
+              <><ShoppingCart className="w-3.5 h-3.5" />{t("productCard.addToCart")}</>
+            )}
+          </button>
 
-          {/* Add to Inquiry + Save row */}
+          {/* Secondary row: Request a Quote (email) + Save */}
           <div className="flex gap-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); onAddToInquiry?.(product); }}
-              className={`flex items-center justify-center gap-1.5 flex-1 h-8 rounded-full text-xs font-semibold border transition-all ${
-                inInquiry
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5"
-              }`}
+            <a
+              href={`mailto:info@aksantimed.com?subject=${quoteSubject}&body=${quoteBody}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center justify-center gap-1.5 flex-1 h-8 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
             >
-              {inInquiry ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-              {inInquiry ? t("productCard.addedToInquiry") : t("productCard.addToInquiry")}
-            </button>
+              <Mail className="w-3.5 h-3.5" />
+              {t("productCard.requestQuote")}
+            </a>
 
             {/* Save for later */}
             <button

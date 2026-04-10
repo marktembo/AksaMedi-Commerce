@@ -97,8 +97,9 @@
     "inStock": "En stock",
     "viewDetails": "Ver detalles →",
     "requestQuote": "Solicitar cotización",
-    "addToInquiry": "Añadir a la lista de consultas",
-    "addedToInquiry": "Añadido a la consulta",
+    "addToCart": "Añadir al carrito",
+    "addedToCart": "¡Añadido!",
+    "addedToCartTitle": "Añadido al carrito",
     "saveForLater": "Guardar para más tarde",
     "unsave": "Eliminar de guardados",
     "medicalSupply": "Suministro médico"

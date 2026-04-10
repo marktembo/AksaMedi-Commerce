@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useParams, Link } from "wouter";
-import { useGetProduct, useListProducts } from "@workspace/api-client-react";
+import { useGetProduct, useListProducts, useAddToCart } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/product/ProductCard";
-import { ChevronRight, HeartPulse, Activity, ShieldCheck, Info, Factory, FileText, CheckCircle2, MessageSquare, Phone, Mail } from "lucide-react";
+import { ChevronRight, HeartPulse, Activity, ShieldCheck, Info, Factory, FileText, CheckCircle2, Phone, Mail, ShoppingCart, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSessionId } from "@/lib/session";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +24,26 @@ export default function ProductDetail() {
     { categoryId: product?.categoryId || undefined, limit: 4 },
     { query: { enabled: !!product?.categoryId } }
   );
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [addedToCart, setAddedToCart] = useState(false);
+
+  const addToCartMutation = useAddToCart({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+        setAddedToCart(true);
+        toast({ title: "Added to Cart", description: product?.name });
+        setTimeout(() => setAddedToCart(false), 2500);
+      },
+    },
+  });
+
+  const handleAddToCart = () => {
+    if (!product || addedToCart || addToCartMutation.isPending) return;
+    addToCartMutation.mutate({ data: { sessionId: getSessionId(), productId: product.id, quantity: 1 } });
+  };
 
   if (isLoading) {
     return (
@@ -167,25 +191,42 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Request a Quote Area */}
+            {/* Add to Cart / Quote Area */}
             <div className="bg-muted/30 p-6 rounded-xl border border-border mt-auto space-y-3">
               <p className="text-sm text-muted-foreground">
                 Contact us for pricing, availability, and bulk order discounts.
               </p>
-              <a
-                href={`mailto:info@aksantimed.com?subject=${quoteSubject}&body=${quoteBody}`}
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-full bg-primary text-white font-bold text-base shadow-md hover:bg-primary/90 transition-colors"
+              <button
+                onClick={handleAddToCart}
+                disabled={!product.inStock || addToCartMutation.isPending}
+                className={`flex items-center justify-center gap-2 w-full h-12 rounded-full font-bold text-base shadow-md transition-colors ${
+                  addedToCart
+                    ? "bg-green-600 text-white"
+                    : "bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                }`}
               >
-                <MessageSquare className="h-5 w-5" />
-                Request a Quote
-              </a>
-              <div className="grid grid-cols-2 gap-3">
+                {addedToCart ? (
+                  <><Check className="h-5 w-5" /> Added to Cart</>
+                ) : addToCartMutation.isPending ? (
+                  <><div className="h-5 w-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Adding...</>
+                ) : (
+                  <><ShoppingCart className="h-5 w-5" /> Add to Cart</>
+                )}
+              </button>
+              <div className="grid grid-cols-3 gap-3">
                 <a
                   href="tel:+243000000000"
                   className="flex items-center justify-center gap-2 h-10 rounded-full border border-border bg-white text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   <Phone className="h-4 w-4" />
                   Call Us
+                </a>
+                <a
+                  href={`mailto:info@aksantimed.com?subject=${quoteSubject}&body=${quoteBody}`}
+                  className="flex items-center justify-center gap-2 h-10 rounded-full border border-border bg-white text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
+                >
+                  <Mail className="h-4 w-4" />
+                  Quote
                 </a>
                 <a
                   href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}

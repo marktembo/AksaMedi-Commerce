@@ -97,8 +97,9 @@
     "inStock": "Em stock",
     "viewDetails": "Ver detalhes →",
     "requestQuote": "Solicitar orçamento",
-    "addToInquiry": "Adicionar à lista de consultas",
-    "addedToInquiry": "Adicionado à consulta",
+    "addToCart": "Adicionar ao carrinho",
+    "addedToCart": "Adicionado!",
+    "addedToCartTitle": "Adicionado ao carrinho",
     "saveForLater": "Salvar para mais tarde",
     "unsave": "Remover dos salvos",
     "medicalSupply": "Suprimento médico"
