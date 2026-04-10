@@ -5,12 +5,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/product/ProductCard";
-import { ChevronRight, HeartPulse, Activity, ShieldCheck, Info, Factory, FileText, CheckCircle2, MessageSquare, Phone, Mail } from "lucide-react";
+import { ChevronRight, HeartPulse, Activity, ShieldCheck, Info, Factory, FileText, CheckCircle2, MessageSquare, Phone, Mail, ShoppingCart, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuoteCart } from "@/contexts/QuoteCartContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const productId = parseInt(id, 10);
+  const { addItem, isInCart } = useQuoteCart();
+  const { toast } = useToast();
 
   const { data: product, isLoading } = useGetProduct(productId, {
     query: { enabled: !!productId }
@@ -51,8 +55,11 @@ export default function ProductDetail() {
     );
   }
 
-  const quoteSubject = encodeURIComponent(`Quote Request: ${product.name} (SKU: ${product.sku || product.id})`);
-  const quoteBody = encodeURIComponent(`Hello Aksantimed,\n\nI would like to request a quote for the following product:\n\nProduct: ${product.name}\nSKU: ${product.sku || "N/A"}\nManufacturer: ${product.manufacturer || "N/A"}\n\nQuantity required:\nDelivery location:\nAdditional notes:\n\nThank you.`);
+  const inCart = isInCart(product.id);
+  const handleAddToCart = () => {
+    addItem(product);
+    toast({ title: inCart ? "Quantity updated" : "Added to quote cart", description: product.name });
+  };
 
   return (
     <div className="bg-background flex-1">
@@ -167,18 +174,27 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Request a Quote Area */}
+            {/* Add to Quote Cart Area */}
             <div className="bg-muted/30 p-6 rounded-xl border border-border mt-auto space-y-3">
               <p className="text-sm text-muted-foreground">
-                Contact us for pricing, availability, and bulk order discounts.
+                Add to your quote cart, then submit a single request for all selected products.
               </p>
-              <a
-                href={`mailto:info@aksantimed.com?subject=${quoteSubject}&body=${quoteBody}`}
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-full bg-primary text-white font-bold text-base shadow-md hover:bg-primary/90 transition-colors"
+              <button
+                onClick={handleAddToCart}
+                className={`flex items-center justify-center gap-2 w-full h-12 rounded-full font-bold text-base shadow-md transition-all ${
+                  inCart
+                    ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20"
+                    : "bg-primary text-white hover:bg-primary/90"
+                }`}
               >
-                <MessageSquare className="h-5 w-5" />
-                Request a Quote
-              </a>
+                {inCart ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
+                {inCart ? "Added to Quote Cart" : "Add to Quote Cart"}
+              </button>
+              {inCart && (
+                <Link href="/cart" className="flex items-center justify-center gap-1.5 w-full h-10 rounded-full border border-primary text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-colors">
+                  View Quote Cart & Checkout →
+                </Link>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <a
                   href="tel:+243000000000"
@@ -188,7 +204,7 @@ export default function ProductDetail() {
                   Call Us
                 </a>
                 <a
-                  href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}
+                  href="mailto:info@aksantimed.com"
                   className="flex items-center justify-center gap-2 h-10 rounded-full border border-border bg-white text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   <Mail className="h-4 w-4" />

@@ -4,12 +4,14 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
   HeartPulse, Users, MessageSquare, LogOut, RefreshCw,
   Building2, Mail, Phone, Briefcase, Calendar, ChevronDown,
-  ChevronRight, CheckCircle, Clock, Search, ShieldCheck
+  ChevronRight, CheckCircle, Clock, Search, ShieldCheck,
+  ClipboardList, Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const API_BASE = "/api";
+const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
+const API_BASE = `${BASE}/api`;
 
 interface AdminCustomer {
   id: number;
@@ -40,7 +42,26 @@ interface AdminInquiry {
   customerCompany: string | null;
 }
 
-type Tab = "customers" | "inquiries";
+interface QuoteRequest {
+  id: number;
+  requestNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
+  companyName: string | null;
+  deliveryCity: string | null;
+  message: string | null;
+  status: string;
+  createdAt: string;
+  items: Array<{
+    id: number;
+    productName: string;
+    productSku: string | null;
+    quantity: number;
+  }>;
+}
+
+type Tab = "customers" | "inquiries" | "quotes";
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -59,13 +80,17 @@ async function adminFetch<T>(path: string, token: string, options: RequestInit =
 export default function AdminDashboardPage() {
   const { adminToken, adminLogout } = useAdminAuth();
   const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState<Tab>("customers");
+  const [activeTab, setActiveTab] = useState<Tab>("quotes");
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [inquiries, setInquiries] = useState<AdminInquiry[]>([]);
+  const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
   const [inquirySearch, setInquirySearch] = useState("");
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [expandedQuotes, setExpandedQuotes] = useState<Set<number>>(new Set());
   const [expandedSubmissions, setExpandedSubmissions] = useState<Set<string>>(new Set());
 
   const fetchCustomers = useCallback(() => {
@@ -86,7 +111,16 @@ export default function AdminDashboardPage() {
       .finally(() => setLoadingInquiries(false));
   }, [adminToken]);
 
-  useEffect(() => { fetchCustomers(); fetchInquiries(); }, [fetchCustomers, fetchInquiries]);
+  const fetchQuotes = useCallback(() => {
+    if (!adminToken) return;
+    setLoadingQuotes(true);
+    adminFetch<QuoteRequest[]>("/quote-requests/admin", adminToken)
+      .then(setQuotes)
+      .catch(() => {})
+      .finally(() => setLoadingQuotes(false));
+  }, [adminToken]);
+
+  useEffect(() => { fetchCustomers(); fetchInquiries(); fetchQuotes(); }, [fetchCustomers, fetchInquiries, fetchQuotes]);
 
   const handleLogout = () => { adminLogout(); navigate("/admin/login"); };
 
@@ -98,6 +132,14 @@ export default function AdminDashboardPage() {
     } catch { /* ignore */ }
   };
 
+  const updateQuoteStatus = async (id: number, status: string) => {
+    if (!adminToken) return;
+    try {
+      await adminFetch(`/quote-requests/admin/${id}/status`, adminToken, { method: "PATCH", body: JSON.stringify({ status }) });
+      setQuotes((prev) => prev.map((q) => q.id === id ? { ...q, status } : q));
+    } catch { /* ignore */ }
+  };
+
   const toggleExpand = (key: string) => {
     setExpandedSubmissions((prev) => {
       const next = new Set(prev);
@@ -105,6 +147,24 @@ export default function AdminDashboardPage() {
       return next;
     });
   };
+
+  const toggleQuote = (id: number) => {
+    setExpandedQuotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const QUOTE_STATUSES = ["new", "pending", "contacted", "closed"] as const;
+
+  const filteredQuotes = quotes.filter((q) =>
+    !quoteSearch ||
+    q.customerName.toLowerCase().includes(quoteSearch.toLowerCase()) ||
+    q.customerEmail.toLowerCase().includes(quoteSearch.toLowerCase()) ||
+    q.requestNumber.toLowerCase().includes(quoteSearch.toLowerCase()) ||
+    (q.companyName ?? "").toLowerCase().includes(quoteSearch.toLowerCase())
+  );
 
   const filteredCustomers = customers.filter((c) =>
     !customerSearch ||
@@ -169,9 +229,9 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Total Customers", value: customers.length, icon: Users, color: "text-blue-600 bg-blue-50" },
-            { label: "Total Inquiries", value: inquiries.length, icon: MessageSquare, color: "text-[#8B0000] bg-red-50" },
+            { label: "Quote Requests", value: quotes.length, icon: ClipboardList, color: "text-[#8B0000] bg-red-50" },
             { label: "Active Clients", value: customers.filter((c) => c.isActive).length, icon: CheckCircle, color: "text-green-600 bg-green-50" },
-            { label: "Pending Responses", value: inquiries.filter((i) => i.status === "sent").length, icon: Clock, color: "text-amber-600 bg-amber-50" },
+            { label: "New Quotes", value: quotes.filter((q) => q.status === "new").length, icon: Clock, color: "text-amber-600 bg-amber-50" },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
               <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
@@ -188,6 +248,7 @@ export default function AdminDashboardPage() {
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-white rounded-xl border border-gray-100 p-1 w-fit">
           {([
+            { key: "quotes", label: "Quote Requests", icon: ClipboardList },
             { key: "customers", label: "Customers", icon: Users },
             { key: "inquiries", label: "Inquiries", icon: MessageSquare },
           ] as const).map(({ key, label, icon: Icon }) => (
@@ -205,11 +266,149 @@ export default function AdminDashboardPage() {
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                 activeTab === key ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
               }`}>
-                {key === "customers" ? customers.length : inquiries.length}
+                {key === "quotes" ? quotes.length : key === "customers" ? customers.length : inquiries.length}
               </span>
             </button>
           ))}
         </div>
+
+        {/* Quotes tab */}
+        {activeTab === "quotes" && (
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-100">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by name, email, ref…"
+                  value={quoteSearch}
+                  onChange={(e) => setQuoteSearch(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                />
+              </div>
+              <button onClick={fetchQuotes} disabled={loadingQuotes} className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-50">
+                <RefreshCw className={`h-4 w-4 ${loadingQuotes ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+
+            {loadingQuotes ? (
+              <div className="flex items-center justify-center py-16 text-gray-400">
+                <RefreshCw className="h-5 w-5 animate-spin" />
+              </div>
+            ) : filteredQuotes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <ClipboardList className="h-10 w-10 mb-3 opacity-30" />
+                <p className="text-sm">No quote requests yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {filteredQuotes.map((q) => {
+                  const isExpanded = expandedQuotes.has(q.id);
+                  const statusColors: Record<string, string> = {
+                    new: "bg-amber-50 text-amber-700 border-amber-200",
+                    pending: "bg-blue-50 text-blue-700 border-blue-200",
+                    contacted: "bg-purple-50 text-purple-700 border-purple-200",
+                    closed: "bg-green-50 text-green-700 border-green-200",
+                  };
+                  return (
+                    <div key={q.id} className="p-4">
+                      {/* Header row */}
+                      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="font-mono text-xs font-bold text-[#8B0000] bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                            {q.requestNumber}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded border font-semibold ${statusColors[q.status] ?? "bg-gray-50 text-gray-600 border-gray-200"}`}>
+                            {q.status.charAt(0).toUpperCase() + q.status.slice(1)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-400">{formatDate(q.createdAt)}</span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-700 mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-gray-400" />
+                          <span className="font-medium">{q.customerName}</span>
+                        </div>
+                        {q.companyName && (
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                            <span>{q.companyName}</span>
+                          </div>
+                        )}
+                        <a href={`mailto:${q.customerEmail}`} className="flex items-center gap-1.5 text-blue-600 hover:underline">
+                          <Mail className="h-3.5 w-3.5" />
+                          {q.customerEmail}
+                        </a>
+                        {q.customerPhone && (
+                          <a href={`tel:${q.customerPhone}`} className="flex items-center gap-1.5 text-gray-600 hover:underline">
+                            <Phone className="h-3.5 w-3.5 text-gray-400" />
+                            {q.customerPhone}
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Items preview */}
+                      <button
+                        onClick={() => toggleQuote(q.id)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 mb-2"
+                      >
+                        {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                        {q.items.length} product{q.items.length !== 1 ? "s" : ""} requested
+                      </button>
+
+                      {isExpanded && (
+                        <div className="mb-3 bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="bg-gray-100 text-gray-500 text-left">
+                                <th className="px-3 py-2 font-semibold">Product</th>
+                                <th className="px-3 py-2 font-semibold">SKU</th>
+                                <th className="px-3 py-2 font-semibold text-right">Qty</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {q.items.map((item) => (
+                                <tr key={item.id}>
+                                  <td className="px-3 py-2 font-medium">{item.productName}</td>
+                                  <td className="px-3 py-2 text-gray-400">{item.productSku ?? "—"}</td>
+                                  <td className="px-3 py-2 text-right font-bold">{item.quantity}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          {q.message && (
+                            <div className="px-3 py-2 border-t border-gray-100 text-gray-600 italic">
+                              "{q.message}"
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Status update */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-gray-400 mr-1">Set status:</span>
+                        {QUOTE_STATUSES.map((s) => (
+                          <button
+                            key={s}
+                            disabled={q.status === s}
+                            onClick={() => updateQuoteStatus(q.id, s)}
+                            className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors ${
+                              q.status === s
+                                ? "bg-[#8B0000] text-white border-[#8B0000] cursor-default"
+                                : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Customers tab */}
         {activeTab === "customers" && (

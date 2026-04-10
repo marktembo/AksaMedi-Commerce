@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInquiry } from "@/contexts/InquiryContext";
+import { useQuoteCart } from "@/contexts/QuoteCartContext";
 import {
   Search, SlidersHorizontal, ChevronRight, MessageSquare,
   ShieldCheck, Truck, HeadphonesIcon, Award, PackageSearch,
@@ -30,8 +30,8 @@ import { useTranslation } from "react-i18next";
 
 export default function ProductsPage() {
   const { t } = useTranslation();
-  const [location] = useLocation();
-  const { inquiryProducts, openInquiry } = useInquiry();
+  const [location, navigate] = useLocation();
+  const { totalItems: cartCount } = useQuoteCart();
 
   const searchParams = new URLSearchParams(window.location.search);
   const initialCategory = searchParams.get("categorySlug") || searchParams.get("category");
@@ -187,14 +187,14 @@ export default function ProductsPage() {
               )}
             </div>
 
-            {/* Inquiry summary button */}
-            {inquiryProducts.length > 0 && (
+            {/* Quote cart button */}
+            {cartCount > 0 && (
               <button
-                onClick={openInquiry}
+                onClick={() => navigate("/cart")}
                 className="flex items-center gap-2.5 rounded-full bg-primary text-white px-5 h-10 text-sm font-bold shadow-lg hover:bg-primary/90 transition-colors shrink-0 animate-in slide-in-from-right-4"
               >
                 <ClipboardList className="h-4 w-4" />
-                {t("products.inquiryList")} ({inquiryProducts.length})
+                {t("products.inquiryList")} ({cartCount})
               </button>
             )}
           </div>
@@ -275,16 +275,16 @@ export default function ProductsPage() {
                   </SelectContent>
                 </Select>
 
-                {/* Inquiry list trigger */}
+                {/* Quote cart trigger */}
                 <button
-                  onClick={openInquiry}
-                  className={`relative flex items-center gap-1.5 h-9 rounded-lg px-3 text-sm font-medium border transition-colors ${inquiryProducts.length > 0 ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
+                  onClick={() => navigate("/cart")}
+                  className={`relative flex items-center gap-1.5 h-9 rounded-lg px-3 text-sm font-medium border transition-colors ${cartCount > 0 ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
                 >
                   <MessageSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t("products.inquiry")}</span>
-                  {inquiryProducts.length > 0 && (
+                  {cartCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">
-                      {inquiryProducts.length}
+                      {cartCount}
                     </span>
                   )}
                 </button>

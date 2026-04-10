@@ -32,28 +32,43 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - Route: `/admin/login` → `/admin`
 - Credentials: username `admin`, password `aksantimed`
 - JWT-based admin auth (separate secret from user JWT)
-- Shows all registered customers in a searchable table
-- Shows all submitted inquiries grouped by submission, with status management (Mark as Responded)
+- **Quote Requests tab** — Shows all quote submissions with product line items, customer details, status management (new → pending → contacted → closed)
+- Customers tab — searchable registered customer list
+- Inquiries tab — legacy inquiry history
 - No header/footer — fully standalone admin UI
+
+## Quote Cart Flow (Core Business Model)
+
+Aksantimed uses a quote-based model — no prices shown publicly. Flow:
+
+1. **Browse** — Products page / ProductDetail page
+2. **Add to Quote Cart** — Button on ProductCard and ProductDetail; stored in `localStorage` (key: `aksantimed_quote_cart`) via `QuoteCartContext`
+3. **Quote Cart page** (`/cart`) — Review items, update quantities, remove items
+4. **Checkout page** (`/checkout`) — Fill contact details, submit to `POST /api/quote-requests`
+5. **Confirmation page** (`/order-confirmation/:id?rn=QR-...`) — Shows reference number, next steps
+6. **Admin receives** — Quote shows in `/admin` → Quote Requests tab; admin can update status
 
 ## Features
 
 - Homepage with hero, featured categories, featured products, trust strip
 - Product catalog with category filtering, search, pagination
-- Product detail page with add to cart
-- Shopping cart with quantity controls
-- Checkout flow (DRC & South Africa focused)
-- Order confirmation page
+- Product detail page with "Add to Quote Cart" button
+- Quote cart with quantity controls and localStorage persistence
+- Quote checkout form (name, email, phone, company, delivery city, message)
+- Quote confirmation page with reference number
+- Full EN/FR/ES/PT internationalization (i18next)
 
 ## Database Tables
 
 - `categories` — Product categories (pharmaceuticals, devices, etc.)
 - `products` — Medical products with pricing, stock, prescription flag
-- `cart_items` — Session-based cart items
-- `orders` + `order_items` — Customer orders
+- `cart_items` — Session-based legacy cart items (kept, unused in new flow)
+- `orders` + `order_items` — Legacy customer orders
 - `users` — Business client accounts (clinics, hospitals, practices)
 - `saved_products` — Products saved/bookmarked by each user
-- `user_inquiries` — Quote inquiry history per user
+- `user_inquiries` — Legacy inquiry history per user
+- `quote_requests` — Quote submissions (requestNumber, customerName/Email/Phone, companyName, deliveryCity, message, status)
+- `quote_request_items` — Line items per quote (productId, productName, productSku, quantity)
 
 ## Authentication System
 

@@ -1,0 +1,140 @@
+Please change my current quote flow.
+
+Current behavior:
+- When a user clicks “Request a Quote”, it immediately triggers an email.
+
+What I want instead:
+- When a user clicks “Request a Quote”, it should add that product to a cart (quote cart / inquiry cart), NOT send an email immediately.
+- The user should then be able to open the cart, review all selected items, and proceed to checkout.
+- At checkout, the customer fills in their details and submits the request as a single order / quote request.
+- Only after checkout submission should the order/request be created and optionally emailed to admin.
+
+Please implement the following:
+
+1. Change the “Request a Quote” button behavior
+- Replace the current email-trigger action
+- Clicking “Request a Quote” should:
+  - Add the product to a quote cart
+  - Show success feedback like “Added to cart” or “Added to quote cart”
+  - Update the cart count in the header/navbar
+
+2. Create a quote cart / inquiry cart system
+The cart should support:
+- Add item
+- Remove item
+- Increase quantity
+- Decrease quantity
+- Prevent duplicate separate entries by merging same products and increasing quantity
+- Persist cart during browsing (local state, localStorage, or existing app state)
+- Show subtotal quantity of items
+- Optional notes per item if easy to support
+
+3. Cart page or cart drawer
+Create a cart page or side drawer where users can:
+- See all selected products
+- View product image
+- Product name
+- Quantity
+- Remove item
+- Continue shopping
+- Proceed to checkout
+
+4. Checkout flow
+Create a checkout page for quote/order submission with:
+- Full name
+- Email
+- Phone number
+- Company / Clinic / Hospital name
+- Delivery city / location if relevant
+- Optional message / special notes
+
+At checkout, show an order summary including:
+- Selected products
+- Quantities
+- Total number of items
+
+5. Submit as order / quote request
+When the customer submits checkout:
+- Create one order / quote request containing all selected cart items
+- Save the order/request in a structured format
+- Then optionally send one email notification to admin with the full order details
+- Do NOT send separate emails per product
+
+6. Order structure
+Each order / quote request should include:
+- Customer details
+- Date created
+- Order/request ID if possible
+- List of products
+- Quantity per product
+- Notes/message
+- Status field such as:
+  - New
+  - Pending
+  - Contacted
+  - Closed
+
+7. Admin readiness
+Please structure this so it can later support an admin dashboard where I can view:
+- All submitted orders / quote requests
+- Customer info
+- Products requested
+- Status updates
+
+If there is already a backend/database:
+- Save orders properly in the database
+- Create an order/quote request model/table if needed
+
+If there is no backend yet:
+- Build the full frontend flow
+- Structure the submit logic clearly so backend/database integration can be connected easily later
+- Use temporary/mock storage only if necessary, but keep it clean and easy to replace
+
+8. UI updates
+Update the header/navigation to include:
+- Cart icon
+- Cart item count
+- Link to cart
+
+Make sure the UI:
+- Feels modern and clean
+- Is mobile responsive
+- Matches the current site design
+- Gives clear feedback when items are added to cart
+
+9. Important logic changes
+Please find the current logic that sends the email directly from “Request a Quote” and refactor it so:
+- Product page / product cards only add to cart
+- Email/order submission only happens after checkout submission
+
+10. Optional improvements if possible
+If suitable, also add:
+- Toast notification when adding to cart
+- Empty cart state
+- Clear cart after successful submission
+- Success page after checkout such as “Your quote request has been submitted”
+- Save order to customer account if customer login exists
+
+11. Keep code clean
+- Do not break the existing site
+- Reuse existing components where possible
+- Keep the code modular
+- Use clear naming
+- Preserve current design style
+- Refactor carefully instead of rebuilding everything from scratch
+
+Please identify and update all relevant areas, including:
+- Product card button logic
+- Product detail page button logic
+- Cart state/store/context
+- Cart UI
+- Checkout form
+- Order submission logic
+- Any backend endpoint or email logic currently tied directly to “Request a Quote”
+
+After making the changes, explain clearly:
+1. What files were changed
+2. How the new cart flow works
+3. Where the old direct-email logic was removed/refactored
+4. What still needs manual setup from me
+5. Whether the order data is stored in database, local storage, or temporary state

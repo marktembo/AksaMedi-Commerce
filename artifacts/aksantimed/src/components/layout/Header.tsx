@@ -9,8 +9,7 @@ import {
   User, LogOut, LayoutDashboard, LogIn, UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGetCart } from "@workspace/api-client-react";
-import { getSessionId } from "@/lib/session";
+import { useQuoteCart } from "@/contexts/QuoteCartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -85,11 +84,7 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslation();
 
-  const sessionId = getSessionId();
-  const { data: cart } = useGetCart(
-    { sessionId },
-    { query: { enabled: !!sessionId, queryKey: ["/api/cart", { sessionId }] } }
-  );
+  const { totalItems: cartItemCount } = useQuoteCart();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -344,12 +339,12 @@ export function Header() {
             <div className="h-5 w-px bg-gray-200 mx-0.5" />
 
             {/* Request a Quote */}
-            <a
-              href="mailto:info@aksantimed.com?subject=Quote Request"
+            <Link
+              href="/cart"
               className="inline-flex items-center whitespace-nowrap rounded-full bg-primary px-4 h-9 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
             >
               {t("nav.requestQuote")}
-            </a>
+            </Link>
 
             {/* Account — authenticated or Sign Up dropdown */}
             {isAuthenticated ? (
@@ -430,9 +425,9 @@ export function Header() {
               <div className="flex items-center justify-center h-9 w-9 rounded-full text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors duration-200">
                 <ShoppingCart className="h-4 w-4" />
               </div>
-              {cart && cart.itemCount > 0 && (
+              {cartItemCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white ring-2 ring-white">
-                  {cart.itemCount}
+                  {cartItemCount}
                 </span>
               )}
             </Link>
@@ -511,14 +506,14 @@ export function Header() {
               </div>
             </nav>
 
-            <a
-              href="mailto:info@aksantimed.com?subject=Quote Request"
+            <Link
+              href="/cart"
               className="flex items-center justify-center gap-2 w-full rounded-full bg-primary h-12 text-base font-semibold text-white hover:bg-primary/90 transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <MessageSquare className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5" />
               {t("nav.requestQuote")}
-            </a>
+            </Link>
           </div>
         </div>
       )}
