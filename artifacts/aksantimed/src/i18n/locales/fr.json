@@ -97,9 +97,8 @@
     "inStock": "En stock",
     "viewDetails": "Voir les détails →",
     "requestQuote": "Demander un devis",
-    "addToCart": "Ajouter au panier",
-    "addedToCart": "Ajouté !",
-    "addedToCartTitle": "Ajouté au panier",
+    "addToInquiry": "Ajouter à la liste de demandes",
+    "addedToInquiry": "Ajouté à la demande",
     "saveForLater": "Sauvegarder pour plus tard",
     "unsave": "Retirer des sauvegardés",
     "medicalSupply": "Fourniture médicale"

@@ -97,9 +97,8 @@
     "inStock": "In Stock",
     "viewDetails": "View Details →",
     "requestQuote": "Request a Quote",
-    "addToCart": "Add to Cart",
-    "addedToCart": "Added!",
-    "addedToCartTitle": "Added to Cart",
+    "addToInquiry": "Add to Inquiry List",
+    "addedToInquiry": "Added to Inquiry",
     "saveForLater": "Save for later",
     "unsave": "Remove from saved",
     "medicalSupply": "Medical Supply"
