@@ -3,7 +3,7 @@ import { db, quoteRequestsTable, quoteRequestItemsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { logger } from "../lib/logger";
-import { requireAdmin } from "../lib/auth";
+import { requireAdmin, requireAuth, verifyToken } from "../lib/auth";
 
 export const quoteRequestsRouter = Router();
 
@@ -41,6 +41,13 @@ quoteRequestsRouter.post("/", async (req, res) => {
 
   const { items, ...customerData } = parsed.data;
 
+  let userId: number | null = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const payload = verifyToken(authHeader.slice(7));
+    if (payload) userId = payload.sub;
+  }
+
   try {
     const requestNumber = generateRequestNumber();
 
@@ -48,6 +55,7 @@ quoteRequestsRouter.post("/", async (req, res) => {
       .insert(quoteRequestsTable)
       .values({
         requestNumber,
+        userId,
         customerName: customerData.customerName,
         customerEmail: customerData.customerEmail,
         customerPhone: customerData.customerPhone ?? null,
@@ -80,6 +88,31 @@ quoteRequestsRouter.post("/", async (req, res) => {
   } catch (err) {
     logger.error({ err }, "Failed to create quote request");
     return res.status(500).json({ error: "Failed to submit quote request" });
+  }
+});
+
+quoteRequestsRouter.get("/my", requireAuth, async (req, res) => {
+  try {
+    const requests = await db
+      .select()
+      .from(quoteRequestsTable)
+      .where(eq(quoteRequestsTable.userId, req.userId!))
+      .orderBy(desc(quoteRequestsTable.createdAt));
+
+    const withItems = await Promise.all(
+      requests.map(async (qr) => {
+        const items = await db
+          .select()
+          .from(quoteRequestItemsTable)
+          .where(eq(quoteRequestItemsTable.quoteRequestId, qr.id));
+        return { ...qr, items };
+      })
+    );
+
+    return res.json(withItems);
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch user quote requests");
+    return res.status(500).json({ error: "Failed to fetch quote requests" });
   }
 });
 

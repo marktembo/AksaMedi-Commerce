@@ -7,7 +7,8 @@ import {
   User, Package, FileText, LogOut, Edit2, Save, X,
   Bookmark, Trash2, Mail, Phone, Building2, Briefcase,
   Clock, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff,
-  HeartPulse, ChevronRight, MessageSquare, RefreshCw
+  HeartPulse, ChevronRight, MessageSquare, RefreshCw, ShoppingBag,
+  CheckCircle2, AlertTriangle, Hourglass, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +17,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSavedProducts } from "@/contexts/SavedProductsContext";
 import {
   apiUpdateProfile, apiChangePassword,
-  apiGetInquiries, apiDeleteInquiry, type UserInquiry
+  apiGetInquiries, apiDeleteInquiry, type UserInquiry,
+  apiGetMyQuoteRequests, type MyQuoteRequest,
 } from "@/lib/auth-api";
 import { useTranslation } from "react-i18next";
 
-type Tab = "profile" | "saved" | "inquiries" | "security";
+type Tab = "profile" | "saved" | "quotes" | "inquiries" | "security";
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -57,11 +59,19 @@ export default function DashboardPage() {
   const { savedRecords: savedProducts, removeSaved, isLoading: loadingSaved } = useSavedProducts();
   const [inquiries, setInquiries] = useState<UserInquiry[]>([]);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
+  const [quoteRequests, setQuoteRequests] = useState<MyQuoteRequest[]>([]);
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
 
   const fetchInquiries = () => {
     if (!token) return;
     setLoadingInquiries(true);
     apiGetInquiries(token).then(setInquiries).finally(() => setLoadingInquiries(false));
+  };
+
+  const fetchQuoteRequests = () => {
+    if (!token) return;
+    setLoadingQuotes(true);
+    apiGetMyQuoteRequests(token).then(setQuoteRequests).finally(() => setLoadingQuotes(false));
   };
 
   const handleDeleteInquiry = async (id: number) => {
@@ -112,6 +122,9 @@ export default function DashboardPage() {
     if (activeTab === "inquiries" && token) {
       fetchInquiries();
     }
+    if (activeTab === "quotes" && token) {
+      fetchQuoteRequests();
+    }
   }, [activeTab, token]);
 
   const onSaveProfile = async (data: ProfileFormData) => {
@@ -150,6 +163,7 @@ export default function DashboardPage() {
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "profile", label: t("dashboard.profile"), icon: <User className="w-4 h-4" /> },
     { key: "saved", label: t("dashboard.savedProducts"), icon: <Bookmark className="w-4 h-4" /> },
+    { key: "quotes", label: "Quote Requests", icon: <ShoppingBag className="w-4 h-4" /> },
     { key: "inquiries", label: t("dashboard.inquiries"), icon: <FileText className="w-4 h-4" /> },
     { key: "security", label: t("dashboard.security"), icon: <ShieldCheck className="w-4 h-4" /> },
   ];
@@ -362,6 +376,118 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "quotes" && (
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Quote Requests</h2>
+                    <p className="text-xs text-gray-400 mt-0.5">Your submitted quote requests and their status</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={fetchQuoteRequests}
+                      disabled={loadingQuotes}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                      title="Refresh"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loadingQuotes ? "animate-spin" : ""}`} />
+                    </button>
+                    <Link href="/products">
+                      <Button size="sm" className="bg-[#8B0000] hover:bg-[#6d0000] text-white rounded-full gap-1.5 text-xs">
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        New Quote
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {loadingQuotes ? (
+                  <div className="text-center py-12 text-gray-400 text-sm">Loading…</div>
+                ) : quoteRequests.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">No quote requests yet</p>
+                    <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
+                      Browse the catalog, add products to your quote cart, and submit — your receipts will appear here.
+                    </p>
+                    <Link href="/products">
+                      <Button className="mt-4 bg-[#8B0000] hover:bg-[#6d0000] text-white" size="sm">
+                        Browse Catalog
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {quoteRequests.map((qr) => {
+                      const statusConfig: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
+                        new: { label: "Received", icon: <Hourglass className="w-3 h-3" />, cls: "bg-blue-50 text-blue-600" },
+                        pending: { label: "Under Review", icon: <AlertTriangle className="w-3 h-3" />, cls: "bg-amber-50 text-amber-600" },
+                        contacted: { label: "Contacted", icon: <CheckCircle2 className="w-3 h-3" />, cls: "bg-green-50 text-green-600" },
+                        closed: { label: "Closed", icon: <XCircle className="w-3 h-3" />, cls: "bg-gray-100 text-gray-500" },
+                      };
+                      const st = statusConfig[qr.status] ?? statusConfig.new;
+                      return (
+                        <div key={qr.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                          {/* Header */}
+                          <div className="flex items-center justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-100">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-8 w-8 rounded-full bg-[#8B0000]/10 flex items-center justify-center shrink-0">
+                                <ShoppingBag className="h-4 w-4 text-[#8B0000]" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900 font-mono">{qr.requestNumber}</p>
+                                <p className="text-xs text-gray-400">{formatDate(qr.createdAt)}{qr.deliveryCity ? ` · ${qr.deliveryCity}` : ""}</p>
+                              </div>
+                            </div>
+                            <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-medium ${st.cls}`}>
+                              {st.icon} {st.label}
+                            </span>
+                          </div>
+
+                          {/* Items */}
+                          <div className="divide-y divide-gray-50">
+                            {qr.items.map((item) => (
+                              <div key={item.id} className="flex items-center gap-3 px-4 py-3">
+                                <div className="h-10 w-10 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
+                                  {item.productImageUrl ? (
+                                    <img src={item.productImageUrl} alt={item.productName} className="w-full h-full object-contain p-1" />
+                                  ) : (
+                                    <Package className="h-5 w-5 text-gray-300" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
+                                  {item.productSku && <p className="text-xs text-gray-400">SKU: {item.productSku}</p>}
+                                </div>
+                                <span className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full font-medium shrink-0">
+                                  Qty: {item.quantity}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Admin notes if any */}
+                          {qr.adminNotes && (
+                            <div className="px-4 py-3 bg-green-50/60 border-t border-green-100">
+                              <p className="text-xs font-medium text-green-700 mb-0.5">Response from Aksantimed</p>
+                              <p className="text-xs text-green-800 leading-relaxed">{qr.adminNotes}</p>
+                            </div>
+                          )}
+
+                          {/* Message if any */}
+                          {qr.message && (
+                            <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100">
+                              <p className="text-xs text-gray-500 italic">"{qr.message}"</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -43,8 +43,6 @@ const highlights = [
 ];
 
 export default function GeneralMedicinePage() {
-  const quoteSubject = encodeURIComponent("Quote Request: General Medicine Supplies");
-
   return (
     <div className="bg-background flex-1">
 
@@ -73,13 +71,12 @@ export default function GeneralMedicinePage() {
               and general hospitals with everything needed to deliver high-quality, consistent patient care.
             </p>
             <div className="flex flex-wrap gap-3">
-              <a
-                href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}
-                className="inline-flex items-center gap-2 rounded-full bg-white text-primary px-6 h-11 text-sm font-bold hover:bg-white/90 transition-colors"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Request a Quote
-              </a>
+              <Link href="/products?categorySlug=general-medicine">
+                <Button className="rounded-full h-11 px-6 bg-white text-primary hover:bg-white/90 font-bold">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Add to Quote Cart
+                </Button>
+              </Link>
               <Link href="/products?categorySlug=general-medicine">
                 <Button variant="outline" className="rounded-full h-11 px-6 border-white/40 text-white bg-white/10 hover:bg-white/20">
                   Browse Products <ArrowRight className="h-4 w-4 ml-1" />
@@ -170,13 +167,12 @@ export default function GeneralMedicinePage() {
           Contact our team for a personalised quote, bulk pricing, or to discuss a standing supply arrangement.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
-          <a
-            href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-8 h-12 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Request a Quote
-          </a>
+          <Link href="/products?categorySlug=general-medicine">
+            <Button size="lg" className="rounded-full px-8 h-12 bg-primary hover:bg-primary/90 text-white">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Add to Quote Cart
+            </Button>
+          </Link>
           <Link href="/products?categorySlug=general-medicine">
             <Button size="lg" variant="outline" className="rounded-full px-8 h-12">
               Browse All Products

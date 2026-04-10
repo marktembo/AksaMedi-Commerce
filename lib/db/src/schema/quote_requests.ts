@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const quoteRequestsTable = pgTable("quote_requests", {
   id: serial("id").primaryKey(),
   requestNumber: text("request_number").notNull().unique(),
+  userId: integer("user_id"),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone"),

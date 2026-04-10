@@ -63,9 +63,13 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
+      const authToken = localStorage.getItem("aksantimed_auth_token");
       const response = await fetch(`${BASE}/api/quote-requests`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify({
           ...form,
           items: items.map(({ product, quantity }) => ({

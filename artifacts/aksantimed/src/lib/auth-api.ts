@@ -147,3 +147,27 @@ export async function apiDeleteInquiry(token: string, id: number): Promise<void>
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export interface QuoteRequestItem {
+  id: number;
+  productId: number;
+  productName: string;
+  productSku: string | null;
+  productImageUrl: string | null;
+  quantity: number;
+}
+
+export interface MyQuoteRequest {
+  id: number;
+  requestNumber: string;
+  status: string;
+  deliveryCity: string | null;
+  message: string | null;
+  adminNotes: string | null;
+  createdAt: string;
+  items: QuoteRequestItem[];
+}
+
+export async function apiGetMyQuoteRequests(token: string): Promise<MyQuoteRequest[]> {
+  return request("/quote-requests/my", {}, token);
+}

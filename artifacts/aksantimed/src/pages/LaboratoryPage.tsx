@@ -51,8 +51,6 @@ const useCases = [
 ];
 
 export default function LaboratoryPage() {
-  const quoteSubject = encodeURIComponent("Quote Request: Laboratory Supplies");
-
   return (
     <div className="bg-background flex-1">
 
@@ -82,13 +80,12 @@ export default function LaboratoryPage() {
               — calibrated for Africa's disease landscape.
             </p>
             <div className="flex flex-wrap gap-3">
-              <a
-                href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}
-                className="inline-flex items-center gap-2 rounded-full bg-white text-primary px-6 h-11 text-sm font-bold hover:bg-white/90 transition-colors"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Request a Quote
-              </a>
+              <Link href="/products?categorySlug=laboratory">
+                <Button className="rounded-full h-11 px-6 bg-white text-primary hover:bg-white/90 font-bold">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Add to Quote Cart
+                </Button>
+              </Link>
               <Link href="/products?categorySlug=laboratory">
                 <Button variant="outline" className="rounded-full h-11 px-6 border-white/40 text-white bg-white/10 hover:bg-white/20">
                   Browse Lab Products <ArrowRight className="h-4 w-4 ml-1" />
@@ -200,13 +197,12 @@ export default function LaboratoryPage() {
             Speak to our laboratory supply specialist for tailored recommendations and volume pricing.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a
-              href={`mailto:info@aksantimed.com?subject=${quoteSubject}`}
-              className="inline-flex items-center gap-2 rounded-full bg-white text-primary px-8 h-12 text-sm font-bold hover:bg-white/90 transition-colors"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Request a Quote
-            </a>
+            <Link href="/products?categorySlug=laboratory">
+              <Button size="lg" className="rounded-full px-8 h-12 bg-white text-primary hover:bg-white/90 font-bold">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Add to Quote Cart
+              </Button>
+            </Link>
             <Link href="/products?categorySlug=laboratory">
               <Button size="lg" variant="outline" className="rounded-full px-8 h-12 border-white/40 text-white bg-white/10 hover:bg-white/20">
                 Browse Lab Products
