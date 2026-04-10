@@ -124,15 +124,21 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur-sm shadow-sm">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-16 items-center gap-6">
+
+          {/* Logo + Nav group — left side */}
+          <div className="flex items-center gap-6">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center shrink-0 transition-opacity hover:opacity-90" onClick={closeAll}>
-            <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-9" />
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 transition-opacity hover:opacity-90" onClick={closeAll}>
+            <img src="/aksantimed-logo.png" alt="Aksantimed" className="h-10 w-10 rounded-lg object-contain" />
+            <span className="font-bold text-[#8B0000] text-lg tracking-tight leading-none font-serif hidden sm:block">
+              Aksantimed
+            </span>
           </Link>
 
-          {/* Desktop nav — centered */}
-          <nav className="hidden md:flex items-center gap-0.5 text-sm font-medium flex-1 justify-center">
+          {/* Desktop nav — left-aligned */}
+          <nav className="hidden md:flex items-center gap-0.5 text-sm font-medium">
 
               {/* Home */}
               <Link
@@ -307,8 +313,10 @@ export function Header() {
               </Link>
             </nav>
 
+          </div>{/* end Logo+Nav group */}
+
           {/* Right actions */}
-          <div className="hidden md:flex items-center gap-1.5 shrink-0">
+          <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
 
             {/* Search — icon toggle */}
             {searchOpen ? (
