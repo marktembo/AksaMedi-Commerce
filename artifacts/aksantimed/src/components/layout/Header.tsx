@@ -438,7 +438,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-foreground hover:text-primary hover:bg-primary/5"
+            className="md:hidden ml-auto text-foreground hover:text-primary hover:bg-primary/5"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
