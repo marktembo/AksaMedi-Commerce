@@ -1244,6 +1244,14 @@ export default function AdminDashboardPage() {
     fetchCategories();
   }, [fetchProducts, fetchQuotes, fetchCustomers, fetchCategories]);
 
+  // Refresh quotes immediately + every 30s while on the requests tab
+  useEffect(() => {
+    if (section !== "requests") return;
+    fetchQuotes();
+    const id = setInterval(fetchQuotes, 30_000);
+    return () => clearInterval(id);
+  }, [section, fetchQuotes]);
+
   const handleLogout = () => { adminLogout(); navigate("/admin/login"); };
 
   const handleDeleteProduct = async (id: number) => {

@@ -8,7 +8,7 @@ import {
   Bookmark, Trash2, Mail, Phone, Building2, Briefcase,
   Clock, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff,
   HeartPulse, ChevronRight, MessageSquare, RefreshCw, ShoppingBag,
-  CheckCircle2, AlertTriangle, Hourglass, XCircle,
+  CheckCircle2, AlertTriangle, Hourglass, XCircle, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,6 +170,101 @@ export default function DashboardPage() {
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+  const downloadQuotePDF = (qr: MyQuoteRequest) => {
+    const statusLabels: Record<string, string> = {
+      new: "Received", pending: "Under Review", contacted: "Contacted", closed: "Closed",
+    };
+    const statusLabel = statusLabels[qr.status] ?? "Received";
+    const rows = qr.items.map((item, i) => `
+      <tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}">
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px">${item.productName}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;color:#666">${item.productSku ?? "—"}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;text-align:center">${item.quantity}</td>
+      </tr>`).join("");
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Quote Request ${qr.requestNumber}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;color:#222;background:#fff;padding:32px 40px}
+    @media print{body{padding:0}}
+    .header{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid #8B0000;margin-bottom:24px}
+    .brand{color:#8B0000;font-size:26px;font-weight:800;letter-spacing:-0.5px}
+    .tagline{font-size:11px;color:#999;margin-top:2px}
+    .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:#e8f5e9;color:#2e7d32}
+    .ref{font-family:monospace;font-size:15px;font-weight:700;color:#8B0000}
+    .section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;font-weight:700;margin-bottom:8px;margin-top:20px}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .info-item{padding:10px 14px;background:#fafafa;border:1px solid #eee;border-radius:6px}
+    .info-label{font-size:10px;text-transform:uppercase;color:#aaa;font-weight:700;letter-spacing:0.5px}
+    .info-value{font-size:13px;color:#222;margin-top:2px;font-weight:500}
+    table{width:100%;border-collapse:collapse;margin-top:8px;border-radius:6px;overflow:hidden;border:1px solid #eee}
+    thead tr{background:#8B0000;color:#fff}
+    th{padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700}
+    .msg{background:#f5f5f5;border-left:3px solid #8B0000;padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;color:#444;font-style:italic;margin-top:8px}
+    .footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#aaa}
+    .footer strong{color:#8B0000}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Aksantimed</div>
+      <div class="tagline">Empowering health, enriching lives</div>
+    </div>
+    <div style="text-align:right">
+      <div class="ref">${qr.requestNumber}</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">Date: ${formatDate(qr.createdAt)}</div>
+      <div class="badge" style="margin-top:6px">${statusLabel}</div>
+    </div>
+  </div>
+
+  <div class="section-title">Customer Information</div>
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-label">Full Name</div>
+      <div class="info-value">${user?.fullName ?? "—"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Email</div>
+      <div class="info-value">${user?.email ?? "—"}</div>
+    </div>
+    ${user?.phone ? `<div class="info-item"><div class="info-label">Phone</div><div class="info-value">${user.phone}</div></div>` : ""}
+    ${user?.companyName ? `<div class="info-item"><div class="info-label">Company</div><div class="info-value">${user.companyName}</div></div>` : ""}
+    ${qr.deliveryCity ? `<div class="info-item"><div class="info-label">Delivery City</div><div class="info-value">${qr.deliveryCity}</div></div>` : ""}
+  </div>
+
+  <div class="section-title">Requested Products</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>SKU</th>
+        <th style="text-align:center">Qty</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  ${qr.message ? `<div class="section-title">Your Message</div><div class="msg">"${qr.message}"</div>` : ""}
+
+  <div class="footer">
+    <strong>Aksantimed</strong> · Kinshasa, DRC &amp; South Africa<br/>
+    info@aksantimed.com · www.aksantimed.com<br/>
+    This is an automatically generated quote request receipt.
+  </div>
+</body>
+</html>`;
+    const win = window.open("", "_blank", "width=800,height=900");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 500);
+  };
 
   if (!user) return null;
 
@@ -444,9 +539,18 @@ export default function DashboardPage() {
                                 <p className="text-xs text-gray-400">{formatDate(qr.createdAt)}{qr.deliveryCity ? ` · ${qr.deliveryCity}` : ""}</p>
                               </div>
                             </div>
-                            <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-medium ${st.cls}`}>
-                              {st.icon} {st.label}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-medium ${st.cls}`}>
+                                {st.icon} {st.label}
+                              </span>
+                              <button
+                                onClick={() => downloadQuotePDF(qr)}
+                                title="Download PDF"
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-[#8B0000] hover:bg-red-50 transition-colors"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
 
                           {/* Items */}
