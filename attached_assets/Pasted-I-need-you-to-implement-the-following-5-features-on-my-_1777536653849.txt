@@ -1,0 +1,104 @@
+I need you to implement the following 5 features on my medical ecommerce site. Please make all changes necessary across the frontend, backend, and database.
+
+---
+
+### FEATURE 1: Redirect to Account Creation on Quote Checkout
+
+When a guest (non-logged-in) user tries to proceed to checkout or submit a quote request:
+- Intercept the checkout/quote submission action
+- Save their cart/quote items to localStorage or session so they aren't lost
+- Redirect them to the registration/login page with a message: "Please create an account or log in to submit your quote request."
+- After successful login or registration, automatically redirect them back to the checkout/quote page and restore their saved items.
+
+---
+
+### FEATURE 2: Email Alert on Successful Quote Submission
+
+When a user successfully submits a quote request:
+- Send an email notification to BOTH of the following addresses:
+  - quotes@aksantimeds.com
+  - tembomarkj@gmail.com
+- The email should include:
+  - Customer name and email
+  - Date and time of submission
+  - List of products requested with quantities
+  - Any notes the customer added
+- Use the existing email/SMTP service already configured in the project. If none exists, set up Nodemailer (or SendGrid if this is a Node/Express app) using environment variables for credentials.
+- Store the SMTP credentials in Replit Secrets (environment variables), not hardcoded.
+
+---
+
+### FEATURE 3: Admin Dashboard Alert for New User Registration
+
+When a new user successfully creates an account:
+- Create a notification entry in the database (e.g., a `notifications` table/collection) with:
+  - Type: "new_user"
+  - Message: "New user registered: [user's name] ([user's email])"
+  - Timestamp
+  - Read status: false
+- In the admin dashboard, display a notification bell or banner that shows unread alerts.
+- Clicking the notification should mark it as read.
+- Optionally, also send an email to the admin (tembomarkj@gmail.com) with the new user's name, email, and registration timestamp.
+
+---
+
+### FEATURE 4: Registered Users Tab in Admin Dashboard
+
+Add a new tab in the admin dashboard called "Registered Users":
+- Fetch and display all registered users from the database in a table with columns:
+  - Full Name
+  - Email Address
+  - Phone Number (if collected)
+  - Date Registered
+  - Number of Quote Requests submitted
+  - Account Status (active/inactive)
+- Add a search/filter bar to search by name or email.
+- Add the ability to view a user's quote history by clicking on their row.
+- Paginate the results if there are more than 20 users.
+
+---
+
+### FEATURE 5: Add Classification Categories to "Add Product" Dropdown
+
+In the admin dashboard under the "Add Product" form, find the "Classification" dropdown field and populate it with the following pharmaceutical/medical product categories:
+
+- Analgesics & Pain Relief
+- Antibiotics & Antimicrobials
+- Antivirals
+- Antifungals
+- Antiparasitics
+- Cardiovascular Drugs
+- Antidiabetics
+- Respiratory & Pulmonary
+- Gastrointestinal
+- Dermatologicals
+- Vitamins, Minerals & Supplements
+- Hormones & Endocrinology
+- Oncology
+- Immunosuppressants
+- Neurology & CNS
+- Psychiatry & Mental Health
+- Ophthalmology
+- ENT (Ear, Nose & Throat)
+- Urology & Nephrology
+- Obstetrics & Gynaecology
+- Musculoskeletal
+- Vaccines & Biologicals
+- Surgical & Hospital Supplies
+- Diagnostic & Lab Supplies
+- Medical Devices & Equipment
+- Disinfectants & Antiseptics
+- Dental & Oral Care
+- Nutrition & Enteral Feeding
+- Herbal & Traditional Medicine
+- Other / Unclassified
+
+Make sure the dropdown is alphabetically ordered and that the selected value is properly saved to the database when a product is created or edited.
+
+---
+
+### GENERAL NOTES:
+- Do not break any existing functionality.
+- Use environment variables (Replit Secrets) for all sensitive data like email credentials.
+- Make sure all new database tables/collections are created with proper migrations or initialization scripts.
+- Test that each feature works end-to-end before considering it complete.

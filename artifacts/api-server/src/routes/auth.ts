@@ -3,6 +3,8 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { signToken, hashPassword, comparePassword, toPublicUser, requireAuth } from "../lib/auth";
+import { createNotification } from "./admin-notifications";
+import { sendNewUserEmail } from "../lib/email";
 import crypto from "crypto";
 
 const router: IRouter = Router();
@@ -67,6 +69,22 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     jobTitle: jobTitle ?? null,
     passwordHash,
   }).returning();
+
+  // Fire-and-forget admin notification + email; never block the registration
+  void createNotification({
+    type: "new_user",
+    title: "New customer registered",
+    message: `${user.fullName} (${user.email}) — ${user.companyName}`,
+    link: `/admin#users:${user.id}`,
+    metadata: { userId: user.id, companyName: user.companyName },
+  });
+  void sendNewUserEmail({
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    companyName: user.companyName,
+    registeredAt: user.createdAt,
+  });
 
   const token = signToken(user.id, user.role);
   res.status(201).json({ token, user: toPublicUser(user) });

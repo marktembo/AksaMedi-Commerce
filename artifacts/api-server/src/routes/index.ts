@@ -10,6 +10,8 @@ import accountRouter from "./account";
 import adminRouter from "./admin";
 import { quoteRequestsRouter } from "./quote-requests";
 import { adminProductsRouter } from "./admin-products";
+import { adminUsersRouter } from "./admin-users";
+import { adminNotificationsRouter } from "./admin-notifications";
 import { contactRouter } from "./contact";
 
 const router: IRouter = Router();
@@ -19,6 +21,8 @@ router.use(authRouter);
 router.use(accountRouter);
 router.use(adminRouter);
 router.use(adminProductsRouter);
+router.use(adminUsersRouter);
+router.use(adminNotificationsRouter);
 router.use("/quote-requests", quoteRequestsRouter);
 router.use(contactRouter);
 router.use(productsRouter);

@@ -84,6 +84,31 @@ Aksantimed uses a quote-based model — no prices shown publicly. Flow:
 - `user_inquiries` — Legacy inquiry history per user
 - `quote_requests` — Quote submissions (requestNumber, customerName/Email/Phone, companyName, deliveryCity, message, status)
 - `quote_request_items` — Line items per quote (productId, productName, productSku, quantity)
+- `notifications` — Admin notifications (type, title, message, link, metadata, isRead, createdAt)
+
+## Email & Notifications
+
+- **SendGrid integration** (`artifacts/api-server/src/lib/email.ts`) sends transactional email. Credentials are pulled from the Replit SendGrid connector (`from_email` + `api_key`) at runtime, with `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL` env vars as fallback override. If neither is configured, send becomes a no-op (logged warning, never throws).
+- **Quote-request email**: every successful POST `/api/quote-requests` fires a branded HTML email to `quotes@aksantimeds.com` and `tembomarkj@gmail.com` (fire-and-forget; never blocks the response).
+- **Admin notifications**: rows are inserted into the `notifications` table on every new user registration (`type: "new_user"`) and quote submission (`type: "new_quote"`). Endpoints in `artifacts/api-server/src/routes/admin-notifications.ts`:
+  - `GET /api/admin/notifications?limit=&unread=` — list (normalized: `read` boolean, `id` string)
+  - `GET /api/admin/notifications/unread-count` — bell badge polling endpoint (every 45s in admin UI)
+  - `PATCH /api/admin/notifications/:id/read` — mark one read
+  - `PATCH /api/admin/notifications/read-all` — mark everything read
+- **Admin Users endpoints** (`artifacts/api-server/src/routes/admin-users.ts`):
+  - `GET /api/admin/users?page=&limit=&search=` — paginated, with `quoteCount` per user
+  - `GET /api/admin/users/:id` — user detail + quote history
+  - `PATCH /api/admin/users/:id/active` — enable/disable account
+
+## Guest checkout policy
+
+- The frontend `/checkout` page redirects logged-out visitors to `/login?redirect=/checkout&reason=quote` (cart is preserved via the existing localStorage in `QuoteCartContext`). LoginPage and SignUpPage honour the `redirect` query param and show a context banner.
+- The redirect target is validated client-side: must start with `/` and not `//` (no open redirect).
+- Backend `POST /api/quote-requests` is gated by `requireAuth` — anonymous submissions return 401, so the frontend gate cannot be bypassed.
+
+## Admin dashboard sections
+
+`AdminSection` union: `overview | products | add-product | edit-product | inventory | requests | users | notifications`. The "Notifications" sidebar item carries a maroon unread-count badge; the "Requests" item keeps its existing amber badge. The header has a bell button (top-right) that mirrors the unread count and links to the Notifications section.
 
 ## Authentication System
 

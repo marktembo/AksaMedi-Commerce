@@ -7,7 +7,8 @@ import {
   Check, X, ChevronDown, ChevronRight, Star, Eye, EyeOff,
   CheckCircle, AlertCircle, BarChart3, Users, Upload, Save,
   Mail, Phone, Building2, ImageIcon, ShieldCheck, Loader2,
-  ToggleLeft, ToggleRight, AlertTriangle, Menu
+  ToggleLeft, ToggleRight, AlertTriangle, Menu, Bell, UserPlus,
+  FileText, Inbox
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -77,7 +78,32 @@ interface ProductFormData {
   imageUrl: string;
 }
 
-type AdminSection = "overview" | "products" | "add-product" | "edit-product" | "inventory" | "requests";
+type AdminSection = "overview" | "products" | "add-product" | "edit-product" | "inventory" | "requests" | "users" | "notifications";
+
+// ─── Notifications + Users types ────────────────────────────────────────────
+
+interface AdminNotification {
+  id: string;
+  type: "new_user" | "new_quote" | string;
+  title: string;
+  message: string;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+interface RegisteredUser {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  companyName: string;
+  jobTitle: string | null;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  quoteCount: number;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -129,20 +155,23 @@ function BoolPill({ val, label }: { val: boolean; label: string }) {
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { key: "overview",      label: "Overview",     icon: LayoutDashboard },
-  { key: "products",      label: "Products",     icon: Package },
-  { key: "add-product",   label: "Add Product",  icon: PlusCircle },
-  { key: "inventory",     label: "Inventory",    icon: Warehouse },
-  { key: "requests",      label: "Requests",     icon: ClipboardList },
+  { key: "overview",      label: "Overview",         icon: LayoutDashboard },
+  { key: "products",      label: "Products",         icon: Package },
+  { key: "add-product",   label: "Add Product",      icon: PlusCircle },
+  { key: "inventory",     label: "Inventory",        icon: Warehouse },
+  { key: "requests",      label: "Requests",         icon: ClipboardList },
+  { key: "users",         label: "Registered Users", icon: Users },
+  { key: "notifications", label: "Notifications",    icon: Bell },
 ] as const;
 
 function Sidebar({
-  section, setSection, logout, newQuotes, mobileOpen, setMobileOpen,
+  section, setSection, logout, newQuotes, unreadNotifications, mobileOpen, setMobileOpen,
 }: {
   section: AdminSection;
   setSection: (s: AdminSection) => void;
   logout: () => void;
   newQuotes: number;
+  unreadNotifications: number;
   mobileOpen: boolean;
   setMobileOpen: (v: boolean) => void;
 }) {
@@ -188,6 +217,11 @@ function Sidebar({
               {key === "requests" && newQuotes > 0 && (
                 <span className="ml-auto bg-amber-500 text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
                   {newQuotes > 9 ? "9+" : newQuotes}
+                </span>
+              )}
+              {key === "notifications" && unreadNotifications > 0 && (
+                <span className="ml-auto bg-[#8B0000] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}
             </button>
@@ -1421,6 +1455,260 @@ function RequestsSection({ quotes, loading, fetchQuotes, token }: {
   );
 }
 
+// ─── Users Section ───────────────────────────────────────────────────────────
+
+function UsersSection({
+  users, loading, refresh, onToggleActive,
+}: {
+  users: RegisteredUser[];
+  loading: boolean;
+  refresh: () => void;
+  onToggleActive: (id: string, isActive: boolean) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const filtered = users.filter((u) => {
+    if (!search.trim()) return true;
+    const s = search.toLowerCase();
+    return (
+      u.fullName.toLowerCase().includes(s) ||
+      u.email.toLowerCase().includes(s) ||
+      u.companyName.toLowerCase().includes(s) ||
+      (u.phone ?? "").toLowerCase().includes(s)
+    );
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 md:p-5 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Registered Users</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{users.length} total registered customer{users.length === 1 ? "" : "s"}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 md:flex-none md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, email, company…"
+                className="w-full h-9 pl-8 pr-3 text-xs rounded-lg border border-gray-200 focus:outline-none focus:border-[#8B0000]"
+              />
+            </div>
+            <button
+              onClick={refresh}
+              className="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:text-[#8B0000] hover:border-[#8B0000]/30"
+              title="Refresh"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center text-sm text-gray-400">
+            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+            Loading users…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-sm text-gray-400">
+            <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            {search ? "No users match your search" : "No registered users yet"}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] font-semibold uppercase text-gray-500 border-b border-gray-100">
+                  <th className="px-4 py-2.5">Name</th>
+                  <th className="px-4 py-2.5">Contact</th>
+                  <th className="px-4 py-2.5">Company</th>
+                  <th className="px-4 py-2.5 text-center">Quotes</th>
+                  <th className="px-4 py-2.5">Joined</th>
+                  <th className="px-4 py-2.5 text-center">Status</th>
+                  <th className="px-4 py-2.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((u) => (
+                  <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/60">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900 text-sm">{u.fullName}</div>
+                      {u.jobTitle && <div className="text-[11px] text-gray-500">{u.jobTitle}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 text-gray-700 text-xs">
+                        <Mail className="h-3 w-3 text-gray-400" /> {u.email}
+                      </div>
+                      {u.phone && (
+                        <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-0.5">
+                          <Phone className="h-3 w-3 text-gray-400" /> {u.phone}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 text-gray-700 text-xs">
+                        <Building2 className="h-3 w-3 text-gray-400" /> {u.companyName}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full text-xs font-semibold bg-[#8B0000]/10 text-[#8B0000]">
+                        {u.quoteCount}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{fmtDate(u.createdAt)}</td>
+                    <td className="px-4 py-3 text-center">
+                      {u.isActive ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                          <CheckCircle className="h-2.5 w-2.5" /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                          <X className="h-2.5 w-2.5" /> Disabled
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {u.role !== "admin" && (
+                        <button
+                          onClick={() => onToggleActive(u.id, !u.isActive)}
+                          className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[11px] font-medium border transition-colors ${
+                            u.isActive
+                              ? "border-gray-200 text-gray-600 hover:bg-gray-50"
+                              : "border-[#8B0000]/30 text-[#8B0000] hover:bg-[#8B0000]/5"
+                          }`}
+                        >
+                          {u.isActive ? <ToggleRight className="h-3 w-3" /> : <ToggleLeft className="h-3 w-3" />}
+                          {u.isActive ? "Disable" : "Enable"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Notifications Section ───────────────────────────────────────────────────
+
+function timeAgo(d: string) {
+  const diff = Date.now() - new Date(d).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return fmtDate(d);
+}
+
+function NotificationsSection({
+  notifications, loading, refresh, onMarkRead, onMarkAllRead, onNavigate,
+}: {
+  notifications: AdminNotification[];
+  loading: boolean;
+  refresh: () => void;
+  onMarkRead: (id: string) => void;
+  onMarkAllRead: () => void;
+  onNavigate: (section: AdminSection) => void;
+}) {
+  const unread = notifications.filter((n) => !n.read).length;
+
+  const handleClick = (n: AdminNotification) => {
+    if (!n.read) onMarkRead(n.id);
+    if (n.type === "new_user") onNavigate("users");
+    else if (n.type === "new_quote") onNavigate("requests");
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Bell className="h-4 w-4 text-[#8B0000]" /> Notifications
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {unread > 0 ? `${unread} unread of ${notifications.length}` : `All caught up — ${notifications.length} total`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {unread > 0 && (
+              <button
+                onClick={onMarkAllRead}
+                className="h-9 px-3 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:text-[#8B0000] hover:border-[#8B0000]/30 inline-flex items-center gap-1.5"
+              >
+                <Check className="h-3.5 w-3.5" /> Mark all read
+              </button>
+            )}
+            <button
+              onClick={refresh}
+              className="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:text-[#8B0000] hover:border-[#8B0000]/30"
+              title="Refresh"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center text-sm text-gray-400">
+            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+            Loading…
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="p-16 text-center">
+            <Inbox className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm font-medium text-gray-700">No notifications yet</p>
+            <p className="text-xs text-gray-400 mt-1">
+              You'll see new user signups and quote submissions here.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-50">
+            {notifications.map((n) => {
+              const Icon = n.type === "new_user" ? UserPlus : n.type === "new_quote" ? FileText : Bell;
+              return (
+                <li
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  className={`px-4 md:px-5 py-3.5 flex gap-3 cursor-pointer transition-colors ${
+                    n.read ? "bg-white hover:bg-gray-50" : "bg-[#8B0000]/[0.02] hover:bg-[#8B0000]/[0.05]"
+                  }`}
+                >
+                  <div className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${
+                    n.read ? "bg-gray-100 text-gray-400" : "bg-[#8B0000]/10 text-[#8B0000]"
+                  }`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-sm ${n.read ? "text-gray-700" : "text-gray-900 font-semibold"}`}>
+                        {n.title}
+                      </p>
+                      <span className="shrink-0 text-[10px] text-gray-400 whitespace-nowrap">{timeAgo(n.createdAt)}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
+                  </div>
+                  {!n.read && (
+                    <div className="shrink-0 self-center h-2 w-2 rounded-full bg-[#8B0000]" />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
@@ -1434,10 +1722,15 @@ export default function AdminDashboardPage() {
   const [quotes, setQuotes] = useState<AdminQuote[]>([]);
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingQuotes, setLoadingQuotes] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   const token = adminToken ?? "";
 
@@ -1470,12 +1763,42 @@ export default function AdminDashboardPage() {
       .catch(() => {});
   }, [token]);
 
+  const fetchRegisteredUsers = useCallback(() => {
+    if (!token) return;
+    setLoadingUsers(true);
+    adminFetch<{ users: RegisteredUser[]; total: number }>("/admin/users?limit=200", token)
+      .then((d) => setRegisteredUsers(d.users ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingUsers(false));
+  }, [token]);
+
+  const fetchNotifications = useCallback(() => {
+    if (!token) return;
+    setLoadingNotifications(true);
+    adminFetch<{ notifications: AdminNotification[]; unreadCount: number }>("/admin/notifications?limit=50", token)
+      .then((d) => {
+        setNotifications(d.notifications ?? []);
+        setUnreadCount(d.unreadCount ?? 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingNotifications(false));
+  }, [token]);
+
+  const fetchUnreadCount = useCallback(() => {
+    if (!token) return;
+    adminFetch<{ unreadCount: number }>("/admin/notifications/unread-count", token)
+      .then((d) => setUnreadCount(d.unreadCount ?? 0))
+      .catch(() => {});
+  }, [token]);
+
   useEffect(() => {
     fetchProducts();
     fetchQuotes();
     fetchCustomers();
     fetchCategories();
-  }, [fetchProducts, fetchQuotes, fetchCustomers, fetchCategories]);
+    fetchRegisteredUsers();
+    fetchNotifications();
+  }, [fetchProducts, fetchQuotes, fetchCustomers, fetchCategories, fetchRegisteredUsers, fetchNotifications]);
 
   // Refresh quotes immediately + every 30s while on the requests tab
   useEffect(() => {
@@ -1484,6 +1807,43 @@ export default function AdminDashboardPage() {
     const id = setInterval(fetchQuotes, 30_000);
     return () => clearInterval(id);
   }, [section, fetchQuotes]);
+
+  // Poll unread notification count globally every 45s
+  useEffect(() => {
+    if (!token) return;
+    const id = setInterval(fetchUnreadCount, 45_000);
+    return () => clearInterval(id);
+  }, [token, fetchUnreadCount]);
+
+  // When opening notifications tab → refresh
+  useEffect(() => {
+    if (section === "notifications") fetchNotifications();
+    if (section === "users") fetchRegisteredUsers();
+  }, [section, fetchNotifications, fetchRegisteredUsers]);
+
+  const markNotificationRead = async (id: string) => {
+    setNotifications((ns) => ns.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setUnreadCount((c) => Math.max(0, c - 1));
+    try { await adminFetch(`/admin/notifications/${id}/read`, token, { method: "PATCH" }); } catch { /* silent */ }
+  };
+
+  const markAllNotificationsRead = async () => {
+    setNotifications((ns) => ns.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+    try { await adminFetch("/admin/notifications/read-all", token, { method: "PATCH" }); } catch { /* silent */ }
+  };
+
+  const toggleUserActive = async (id: string, isActive: boolean) => {
+    setRegisteredUsers((us) => us.map((u) => (u.id === id ? { ...u, isActive } : u)));
+    try {
+      await adminFetch(`/admin/users/${id}/active`, token, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive }),
+      });
+    } catch {
+      fetchRegisteredUsers();
+    }
+  };
 
   const handleLogout = () => { adminLogout(); navigate("/admin/login"); };
 
@@ -1529,6 +1889,7 @@ export default function AdminDashboardPage() {
         setSection={goTo}
         logout={handleLogout}
         newQuotes={newQuotes}
+        unreadNotifications={unreadCount}
         mobileOpen={mobileMenuOpen}
         setMobileOpen={setMobileMenuOpen}
       />
@@ -1551,6 +1912,19 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => goTo("notifications")}
+              className="relative h-8 w-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-[#8B0000] hover:bg-gray-100 transition-colors"
+              title={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "Notifications"}
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-[#8B0000] text-white text-[9px] font-bold h-4 min-w-4 px-1 rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
             {section !== "add-product" && section !== "edit-product" && (
               <button
                 onClick={() => goTo("add-product")}
@@ -1601,6 +1975,24 @@ export default function AdminDashboardPage() {
               loading={loadingQuotes}
               fetchQuotes={fetchQuotes}
               token={token}
+            />
+          )}
+          {section === "users" && (
+            <UsersSection
+              users={registeredUsers}
+              loading={loadingUsers}
+              refresh={fetchRegisteredUsers}
+              onToggleActive={toggleUserActive}
+            />
+          )}
+          {section === "notifications" && (
+            <NotificationsSection
+              notifications={notifications}
+              loading={loadingNotifications}
+              refresh={fetchNotifications}
+              onMarkRead={markNotificationRead}
+              onMarkAllRead={markAllNotificationsRead}
+              onNavigate={(s) => goTo(s)}
             />
           )}
         </main>

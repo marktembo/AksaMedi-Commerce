@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { useQuoteCart } from "@/contexts/QuoteCartContext";
@@ -25,7 +25,21 @@ export default function CheckoutPage() {
   const [, setLocation] = useLocation();
   const { items, totalItems, clearCart } = useQuoteCart();
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // ── Feature 1: gate checkout for guests ────────────────────────────────
+  // Cart is already persisted in localStorage by QuoteCartContext, so it
+  // survives the auth round-trip automatically. We just redirect.
+  useEffect(() => {
+    if (authLoading) return;
+    if (items.length === 0) {
+      setLocation("/cart");
+      return;
+    }
+    if (!isAuthenticated) {
+      setLocation("/login?redirect=/checkout&reason=quote");
+    }
+  }, [authLoading, isAuthenticated, items.length, setLocation]);
 
   const [form, setForm] = useState<FormState>({
     customerName: user?.fullName ?? "",
@@ -38,9 +52,28 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Partial<FormState>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  if (items.length === 0) {
-    setLocation("/cart");
-    return null;
+  // Keep form synced once auth resolves (in case user was loading)
+  useEffect(() => {
+    if (user) {
+      setForm((f) => ({
+        ...f,
+        customerName: f.customerName || user.fullName,
+        customerEmail: f.customerEmail || user.email,
+        customerPhone: f.customerPhone || (user.phone ?? ""),
+        companyName: f.companyName || user.companyName,
+      }));
+    }
+  }, [user]);
+
+  if (authLoading || !isAuthenticated || items.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 mx-auto border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-3" />
+          <p className="text-sm text-muted-foreground">Preparing your checkout…</p>
+        </div>
+      </div>
+    );
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

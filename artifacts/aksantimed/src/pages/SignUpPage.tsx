@@ -3,13 +3,21 @@ import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRegister } from "@/lib/auth-api";
 import { useTranslation } from "react-i18next";
+
+function getRedirectParams() {
+  const params = new URLSearchParams(window.location.search);
+  let redirect = params.get("redirect");
+  if (!redirect || !redirect.startsWith("/") || redirect.startsWith("//")) redirect = null;
+  const reason = params.get("reason");
+  return { redirect, reason };
+}
 
 const schema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -34,6 +42,7 @@ export default function SignUpPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [{ redirect, reason }] = useState(getRedirectParams);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -52,7 +61,7 @@ export default function SignUpPage() {
         password: data.password,
       });
       login(token, user);
-      navigate("/account");
+      navigate(redirect || "/account");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -71,6 +80,18 @@ export default function SignUpPage() {
             <h1 className="text-2xl font-bold font-serif text-gray-900">{t("auth.createYourAccount")}</h1>
             <p className="text-sm text-gray-500 mt-1">{t("auth.signUpSubtitle")}</p>
           </div>
+
+          {reason === "quote" && (
+            <div className="flex items-start gap-2.5 bg-[#8B0000]/5 border border-[#8B0000]/20 text-[#8B0000] rounded-lg px-4 py-3 mb-6 text-sm">
+              <ShoppingCart className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Create your account to submit your quote</p>
+                <p className="text-xs text-[#8B0000]/80 mt-0.5">
+                  Your cart is saved. Once registered we'll bring you back to checkout.
+                </p>
+              </div>
+            </div>
+          )}
 
           {serverError && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-6 text-sm">
@@ -196,7 +217,7 @@ export default function SignUpPage() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             {t("auth.alreadyHaveAccount")}{" "}
-            <Link href="/login" className="text-[#8B0000] font-medium hover:underline">
+            <Link href={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}${reason ? `&reason=${reason}` : ""}` : ""}`} className="text-[#8B0000] font-medium hover:underline">
               {t("auth.signInLink")}
             </Link>
           </p>

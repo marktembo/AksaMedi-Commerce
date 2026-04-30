@@ -4,6 +4,8 @@ import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { logger } from "../lib/logger";
 import { requireAdmin, requireAuth, verifyToken } from "../lib/auth";
+import { createNotification } from "./admin-notifications";
+import { sendQuoteSubmissionEmail } from "../lib/email";
 
 export const quoteRequestsRouter = Router();
 
@@ -35,21 +37,18 @@ function generateRequestNumber(): string {
   return `QR-${datePart}-${randPart}`;
 }
 
-// ── POST / — Submit a new quote request ────────────────────────────────────
-quoteRequestsRouter.post("/", async (req, res) => {
+// ── POST / — Submit a new quote request (auth required) ──────────────────────
+// Customers must be logged in to submit a quote request — guests are gated
+// in the UI but enforcement lives here. This prevents anonymous spam from
+// triggering admin emails/notifications.
+quoteRequestsRouter.post("/", requireAuth, async (req, res) => {
   const parsed = createQuoteRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
   }
 
   const { items, ...customerData } = parsed.data;
-
-  let userId: number | null = null;
-  const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith("Bearer ")) {
-    const payload = verifyToken(authHeader.slice(7));
-    if (payload) userId = payload.sub;
-  }
+  const userId = req.userId!;
 
   try {
     const requestNumber = generateRequestNumber();
@@ -81,6 +80,26 @@ quoteRequestsRouter.post("/", async (req, res) => {
     );
 
     logger.info({ quoteRequestId: quoteRequest.id, requestNumber }, "Quote request submitted");
+
+    // Fire-and-forget notification + email; never block the response
+    void createNotification({
+      type: "new_quote",
+      title: `New quote request — ${requestNumber}`,
+      message: `${customerData.customerName} requested ${items.length} product${items.length === 1 ? "" : "s"}`,
+      link: `/admin#requests:${quoteRequest.id}`,
+      metadata: { quoteRequestId: quoteRequest.id, requestNumber, itemCount: items.length },
+    });
+    void sendQuoteSubmissionEmail({
+      requestNumber,
+      customerName: customerData.customerName,
+      customerEmail: customerData.customerEmail,
+      customerPhone: customerData.customerPhone,
+      companyName: customerData.companyName,
+      deliveryCity: customerData.deliveryCity,
+      message: customerData.message,
+      items: items.map((it) => ({ productName: it.productName, productSku: it.productSku, quantity: it.quantity })),
+      submittedAt: quoteRequest.createdAt,
+    });
 
     return res.status(201).json({
       id: quoteRequest.id,
