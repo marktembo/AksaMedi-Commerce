@@ -549,13 +549,14 @@ function productToForm(p: AdminProduct): ProductFormData {
 }
 
 function ProductFormSection({
-  editingProduct, categories, onSave, onCancel, token,
+  editingProduct, categories, onSave, onCancel, token, onCategoriesChanged,
 }: {
   editingProduct: AdminProduct | null;
   categories: AdminCategory[];
   onSave: () => void;
   onCancel: () => void;
   token: string;
+  onCategoriesChanged: () => void;
 }) {
   const isEdit = !!editingProduct;
   const [form, setForm] = useState<ProductFormData>(editingProduct ? productToForm(editingProduct) : EMPTY_FORM);
@@ -564,6 +565,49 @@ function ProductFormSection({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Inline "Add new category" state
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState<string>("");
+
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    setCategoryError("");
+    if (name.length < 2) {
+      setCategoryError("Name must be at least 2 characters");
+      return;
+    }
+    setCreatingCategory(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.id) {
+        // Newly created — auto-select it after the parent refreshes the list.
+        set("categoryId", String(data.id));
+        setNewCategoryName("");
+        setAddingCategory(false);
+        onCategoriesChanged();
+      } else if (res.status === 409 && data?.category?.id) {
+        // Already exists — just select the existing one.
+        set("categoryId", String(data.category.id));
+        setNewCategoryName("");
+        setAddingCategory(false);
+        onCategoriesChanged();
+      } else {
+        setCategoryError(data?.error || "Failed to add category");
+      }
+    } catch {
+      setCategoryError("Network error — please try again");
+    } finally {
+      setCreatingCategory(false);
+    }
+  };
 
   const set = (field: keyof ProductFormData, value: string | boolean) =>
     setForm(f => ({ ...f, [field]: value }));
@@ -700,10 +744,60 @@ function ProductFormSection({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
-                  <select value={form.categoryId} onChange={e => set("categoryId", e.target.value)} className={`${inputCls("categoryId")} bg-white`}>
+                  <select
+                    value={form.categoryId}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === "__new__") {
+                        setAddingCategory(true);
+                        setCategoryError("");
+                      } else {
+                        set("categoryId", v);
+                      }
+                    }}
+                    className={`${inputCls("categoryId")} bg-white`}
+                  >
                     <option value="">Select category…</option>
                     {categories.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                    <option value="__new__">+ Add new category…</option>
                   </select>
+
+                  {addingCategory && (
+                    <div className="mt-2 rounded-lg border border-[#8B0000]/20 bg-[#fdf6f6] p-3">
+                      <label className="text-xs font-semibold text-gray-700 mb-1.5 block">New category name</label>
+                      <div className="flex gap-2">
+                        <input
+                          autoFocus
+                          value={newCategoryName}
+                          onChange={e => { setNewCategoryName(e.target.value); if (categoryError) setCategoryError(""); }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") { e.preventDefault(); void handleCreateCategory(); }
+                            if (e.key === "Escape") { e.preventDefault(); setAddingCategory(false); setNewCategoryName(""); setCategoryError(""); }
+                          }}
+                          placeholder="e.g. Wound Care & Dressings"
+                          className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]"
+                          disabled={creatingCategory}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void handleCreateCategory()}
+                          disabled={creatingCategory || newCategoryName.trim().length < 2}
+                          className="h-9 px-3 rounded-md bg-[#8B0000] text-white text-xs font-semibold hover:bg-[#6B0000] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {creatingCategory ? "Adding…" : "Add"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAddingCategory(false); setNewCategoryName(""); setCategoryError(""); }}
+                          disabled={creatingCategory}
+                          className="h-9 px-3 rounded-md border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      {categoryError && <p className="text-xs text-red-500 mt-1.5">{categoryError}</p>}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Brand / Manufacturer</label>
@@ -1759,7 +1853,12 @@ export default function AdminDashboardPage() {
     if (!token) return;
     fetch(`${API_BASE}/categories`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then((data: { categories?: AdminCategory[] }) => setCategories(data.categories ?? []))
+      .then((data: AdminCategory[] | { categories?: AdminCategory[] }) => {
+        // The /api/categories endpoint returns a plain array; we still tolerate
+        // an older { categories: [...] } envelope for safety.
+        const list = Array.isArray(data) ? data : (data.categories ?? []);
+        setCategories(list);
+      })
       .catch(() => {});
   }, [token]);
 
@@ -1959,6 +2058,7 @@ export default function AdminDashboardPage() {
               onSave={handleProductSaved}
               onCancel={() => goTo(editingProduct ? "products" : "products")}
               token={token}
+              onCategoriesChanged={fetchCategories}
             />
           )}
           {section === "inventory" && (
