@@ -79,12 +79,8 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-function getAdminDashboardUrl(quoteRequestId?: number): string {
-  const envBase = process.env.APP_PUBLIC_URL?.trim();
-  const replitDomain = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
-  const base = envBase || (replitDomain ? `https://${replitDomain}` : "");
-  const path = quoteRequestId ? `/admin#requests:${quoteRequestId}` : "/admin";
-  return base ? `${base}${path}` : path;
+function getAdminDashboardUrl(_quoteRequestId?: number): string {
+  return "https://aksantimeds.com/admin/login";
 }
 
 export async function sendQuoteSubmissionEmail(data: {
