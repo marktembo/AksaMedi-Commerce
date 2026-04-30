@@ -32,7 +32,7 @@ export default function OrderConfirmation() {
             </div>
             <div className="flex gap-3">
               <a
-                href="mailto:info@aksantimed.com"
+                href="mailto:info@aksantimeds.com"
                 className="inline-flex items-center gap-2 h-10 px-4 rounded-full border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/5 transition-colors"
               >
                 <Mail className="h-4 w-4" /> Contact Us
@@ -69,8 +69,8 @@ export default function OrderConfirmation() {
         {/* Contact info */}
         <div className="bg-primary/5 border border-primary/15 rounded-2xl p-6 mb-8 text-center">
           <p className="text-sm text-muted-foreground mb-2">Questions? Reach us directly:</p>
-          <a href="mailto:info@aksantimed.com" className="font-semibold text-primary hover:underline">
-            info@aksantimed.com
+          <a href="mailto:info@aksantimeds.com" className="font-semibold text-primary hover:underline">
+            info@aksantimeds.com
           </a>
         </div>
 

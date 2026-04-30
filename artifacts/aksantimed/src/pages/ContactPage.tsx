@@ -106,9 +106,9 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="space-y-2.5">
-                <a href="mailto:info@aksantimed.com" className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-[#8B0000] transition-colors group">
+                <a href="mailto:info@aksantimeds.com" className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-[#8B0000] transition-colors group">
                   <Mail className="h-4 w-4 text-gray-400 group-hover:text-[#8B0000] shrink-0" />
-                  info@aksantimed.com
+                  info@aksantimeds.com
                 </a>
                 <a href="tel:+243999999999" className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-[#8B0000] transition-colors group">
                   <Phone className="h-4 w-4 text-gray-400 group-hover:text-[#8B0000] shrink-0" />

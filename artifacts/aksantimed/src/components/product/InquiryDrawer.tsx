@@ -74,7 +74,7 @@ export function InquiryDrawer() {
       }
     }
 
-    window.location.href = `mailto:info@aksantimed.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:info@aksantimeds.com?subject=${subject}&body=${body}`;
     setSubmitted(true);
     setSaving(false);
   };

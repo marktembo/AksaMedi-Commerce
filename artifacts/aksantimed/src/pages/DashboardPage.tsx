@@ -264,7 +264,7 @@ export default function DashboardPage() {
 
   <div class="footer">
     <strong>Aksantimed</strong> · Kinshasa, DRC &amp; South Africa<br/>
-    info@aksantimed.com · www.aksantimed.com<br/>
+    info@aksantimeds.com · www.aksantimed.com<br/>
     This is an automatically generated quote request receipt.
   </div>
 </body>

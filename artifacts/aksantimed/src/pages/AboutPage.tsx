@@ -109,7 +109,7 @@ export default function AboutPage() {
               </Button>
             </Link>
             <a
-              href="mailto:info@aksantimed.com?subject=Partnership Inquiry"
+              href="mailto:info@aksantimeds.com?subject=Partnership Inquiry"
               className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 h-11 text-sm font-semibold text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
             >
               {t("about.contactTitle")}
@@ -290,7 +290,7 @@ export default function AboutPage() {
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <a
-            href="mailto:info@aksantimed.com?subject=Partnership Inquiry"
+            href="mailto:info@aksantimeds.com?subject=Partnership Inquiry"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-8 h-12 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
           >
             {t("about.contactTitle")} <ArrowRight className="h-4 w-4" />

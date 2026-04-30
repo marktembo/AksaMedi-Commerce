@@ -214,7 +214,7 @@ export default function ProductDetail() {
                   Call Us
                 </a>
                 <a
-                  href="mailto:info@aksantimed.com"
+                  href="mailto:info@aksantimeds.com"
                   className="flex items-center justify-center gap-2 h-10 rounded-full border border-border bg-white text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   <Mail className="h-4 w-4" />

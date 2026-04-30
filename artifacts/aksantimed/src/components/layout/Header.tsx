@@ -241,7 +241,7 @@ export function Header() {
                             <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-primary" /> Pan-African delivery</span>
                           </div>
                           <a
-                            href="mailto:info@aksantimed.com?subject=Quote Request"
+                            href="mailto:info@aksantimeds.com?subject=Quote Request"
                             onClick={closeAll}
                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary border border-primary/20 bg-primary/5 rounded-full px-4 h-7 hover:bg-primary hover:text-white transition-colors"
                           >

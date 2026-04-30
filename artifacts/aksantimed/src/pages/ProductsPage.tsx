@@ -356,7 +356,7 @@ export default function ProductsPage() {
                   </p>
                   <div className="flex flex-wrap gap-3 justify-center">
                     <a
-                      href="mailto:info@aksantimed.com?subject=Product Sourcing Request"
+                      href="mailto:info@aksantimeds.com?subject=Product Sourcing Request"
                       className="inline-flex items-center gap-2 rounded-full bg-primary text-white px-6 h-10 text-sm font-bold hover:bg-primary/90 transition-colors"
                     >
                       <MessageSquare className="h-4 w-4" /> Contact Us
