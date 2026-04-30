@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
@@ -10,6 +10,10 @@ import {
   ToggleLeft, ToggleRight, AlertTriangle, Menu, Bell, UserPlus,
   FileText, Inbox
 } from "lucide-react";
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -249,6 +253,18 @@ function Sidebar({
 
 // ─── Overview Section ────────────────────────────────────────────────────────
 
+// Friendly label + brand-aware colour for each known quote status. Unknown
+// statuses fall through to a neutral grey.
+const STATUS_META: Record<string, { label: string; color: string }> = {
+  new: { label: "New", color: "#8B0000" },
+  in_progress: { label: "In progress", color: "#F59E0B" },
+  quoted: { label: "Quoted", color: "#0EA5E9" },
+  completed: { label: "Completed", color: "#10B981" },
+  cancelled: { label: "Cancelled", color: "#9CA3AF" },
+  rejected: { label: "Rejected", color: "#6B7280" },
+};
+const STATUS_FALLBACK = { label: "Other", color: "#D1D5DB" };
+
 function OverviewSection({
   products, quotes, customers, setSection,
 }: {
@@ -260,6 +276,46 @@ function OverviewSection({
   const published = products.filter(p => p.published).length;
   const lowStock = products.filter(p => p.stockQuantity <= 5).length;
   const newQuotes = quotes.filter(q => q.status === "new").length;
+
+  // ─── Analytics: quote requests over the last 14 days ─────────────────────
+  const quotesOverTime = useMemo(() => {
+    const days = 14;
+    const buckets: { key: string; label: string; date: Date; count: number }[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      buckets.push({ key, label, date: new Date(d), count: 0 });
+    }
+    const idx = new Map(buckets.map((b, i) => [b.key, i]));
+    for (const q of quotes) {
+      const created = new Date(q.createdAt);
+      if (Number.isNaN(created.getTime())) continue;
+      const key = created.toISOString().slice(0, 10);
+      const i = idx.get(key);
+      if (i !== undefined) buckets[i].count += 1;
+    }
+    return buckets.map(b => ({ label: b.label, count: b.count }));
+  }, [quotes]);
+
+  const totalLast14 = quotesOverTime.reduce((sum, b) => sum + b.count, 0);
+
+  // ─── Analytics: quote status breakdown ───────────────────────────────────
+  const statusBreakdown = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const q of quotes) {
+      counts.set(q.status, (counts.get(q.status) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([status, value]) => {
+        const meta = STATUS_META[status] ?? { ...STATUS_FALLBACK, label: status.replace(/_/g, " ") };
+        return { name: meta.label, value, color: meta.color };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [quotes]);
 
   const stats = [
     { label: "Total Products", value: products.length, icon: Package, color: "text-blue-600 bg-blue-50", action: () => setSection("products") },
@@ -306,6 +362,119 @@ function OverviewSection({
             <Icon className="h-4 w-4" /> {label}
           </button>
         ))}
+      </div>
+
+      {/* Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Quote requests over the last 14 days */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-bold text-gray-900">Quote Requests · Last 14 days</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {totalLast14} request{totalLast14 === 1 ? "" : "s"} received in this window
+              </p>
+            </div>
+            <div className="h-9 w-9 rounded-xl bg-[#fdf6f6] text-[#8B0000] flex items-center justify-center">
+              <BarChart3 className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={quotesOverTime} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="quoteGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8B0000" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#8B0000" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#6B7280" }}
+                  tickLine={false}
+                  axisLine={{ stroke: "#E5E7EB" }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: "#6B7280" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={32}
+                />
+                <Tooltip
+                  cursor={{ stroke: "#8B0000", strokeOpacity: 0.15, strokeWidth: 24 }}
+                  contentStyle={{
+                    border: "1px solid #f1f1f1",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                  }}
+                  labelStyle={{ color: "#1f2937", fontWeight: 600 }}
+                  formatter={(v: number) => [`${v} request${v === 1 ? "" : "s"}`, "Submitted"]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#8B0000"
+                  strokeWidth={2}
+                  fill="url(#quoteGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Quote status breakdown */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-bold text-gray-900">Quote Status</h2>
+              <p className="text-xs text-gray-500 mt-0.5">{quotes.length} request{quotes.length === 1 ? "" : "s"} total</p>
+            </div>
+            <div className="h-9 w-9 rounded-xl bg-[#fdf6f6] text-[#8B0000] flex items-center justify-center">
+              <ClipboardList className="h-4 w-4" />
+            </div>
+          </div>
+          {statusBreakdown.length === 0 ? (
+            <div className="h-56 flex items-center justify-center text-sm text-gray-400">
+              No quote requests yet
+            </div>
+          ) : (
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusBreakdown}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={42}
+                    outerRadius={70}
+                    paddingAngle={2}
+                  >
+                    {statusBreakdown.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} stroke="#ffffff" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ border: "1px solid #f1f1f1", borderRadius: 8, fontSize: 12 }}
+                    formatter={(v: number, n: string) => [`${v} request${v === 1 ? "" : "s"}`, n]}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={28}
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: 11, color: "#4B5563" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Recent Requests */}
