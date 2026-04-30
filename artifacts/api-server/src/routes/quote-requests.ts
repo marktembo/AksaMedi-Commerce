@@ -91,6 +91,7 @@ quoteRequestsRouter.post("/", requireAuth, async (req, res) => {
     });
     void sendQuoteSubmissionEmail({
       requestNumber,
+      quoteRequestId: quoteRequest.id,
       customerName: customerData.customerName,
       customerEmail: customerData.customerEmail,
       customerPhone: customerData.customerPhone,

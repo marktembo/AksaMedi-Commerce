@@ -79,8 +79,17 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
+function getAdminDashboardUrl(quoteRequestId?: number): string {
+  const envBase = process.env.APP_PUBLIC_URL?.trim();
+  const replitDomain = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
+  const base = envBase || (replitDomain ? `https://${replitDomain}` : "");
+  const path = quoteRequestId ? `/admin#requests:${quoteRequestId}` : "/admin";
+  return base ? `${base}${path}` : path;
+}
+
 export async function sendQuoteSubmissionEmail(data: {
   requestNumber: string;
+  quoteRequestId?: number;
   customerName: string;
   customerEmail: string;
   customerPhone?: string | null;
@@ -107,6 +116,8 @@ export async function sendQuoteSubmissionEmail(data: {
     )
     .join("");
 
+  const dashboardUrl = getAdminDashboardUrl(data.quoteRequestId);
+
   const text = `New Quote Request — ${data.requestNumber}
 
 Submitted: ${submittedStr}
@@ -123,6 +134,9 @@ ${itemsText}
 
 CUSTOMER NOTES
 ${data.message || "(none)"}
+
+Respond to this request:
+${dashboardUrl}
 `;
 
   const html = `<div style="font-family:Inter,Arial,sans-serif;background:#f7f7f7;padding:24px;color:#1a1a1a;">
@@ -154,12 +168,22 @@ ${data.message || "(none)"}
       ${
         data.message
           ? `<h3 style="margin:0 0 8px 0;color:#8B0000;font-size:14px;text-transform:uppercase;letter-spacing:.5px;">Customer notes</h3>
-        <div style="background:#fdf6f6;border-left:3px solid #8B0000;padding:12px 16px;border-radius:4px;font-size:14px;line-height:1.5;color:#333;white-space:pre-wrap;">${escapeHtml(data.message)}</div>`
+        <div style="background:#fdf6f6;border-left:3px solid #8B0000;padding:12px 16px;border-radius:4px;font-size:14px;line-height:1.5;color:#333;margin-bottom:24px;white-space:pre-wrap;">${escapeHtml(data.message)}</div>`
           : ""
       }
+
+      <div style="text-align:center;margin-top:8px;">
+        <a href="${escapeHtml(dashboardUrl)}"
+           style="display:inline-block;background:#8B0000;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:.3px;padding:14px 28px;border-radius:8px;box-shadow:0 2px 4px rgba(139,0,0,.2);">
+          Respond to this request →
+        </a>
+        <div style="margin-top:10px;font-size:11px;color:#aaa;word-break:break-all;">
+          or paste this URL: ${escapeHtml(dashboardUrl)}
+        </div>
+      </div>
     </div>
     <div style="background:#fafafa;padding:14px 24px;font-size:12px;color:#888;text-align:center;border-top:1px solid #eee;">
-      Open the admin dashboard to respond and price this request.
+      You're receiving this because you're an Aksantimed admin.
     </div>
   </div>
 </div>`;
